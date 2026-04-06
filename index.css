@@ -1,0 +1,34 @@
+/* 
+  Tailwind v4 Setup: The '@import' and '@theme' rules are part of the new CSS-first 
+  configuration in Tailwind 4. Your editor may show a yellow warning because it
+  doesn't recognize these new rules yet, but they will be processed correctly by Vite.
+*/
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FF3B30;
+  --color-secondary: #34C759;
+  --color-tertiary: #007AFF;
+  --color-accent: #FFD60A;
+  --font-display: "Spline Sans", sans-serif;
+}
+
+body { 
+  font-family: 'Spline Sans', sans-serif; 
+}
+
+.glass { 
+  background: rgba(255, 255, 255, 0.05); 
+  backdrop-filter: blur(12px); 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
+}
+
+.gradient-text { 
+  background: linear-gradient(135deg, #FF3B30, #FFD60A); 
+  -webkit-background-clip: text; 
+  background-clip: text;
+  -webkit-text-fill-color: transparent; 
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

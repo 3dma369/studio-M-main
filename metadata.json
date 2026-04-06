@@ -1,0 +1,8 @@
+{
+  "name": "Molina Multimedia Studio",
+  "description": "A world-class multimedia association led by Eric A. Molina Denegri, focusing on the union of reality, communication art, and humanity through bold social media and video content.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
