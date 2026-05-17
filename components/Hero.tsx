@@ -22,6 +22,10 @@ export const Hero: React.FC<HeroProps> = ({ onAction, onCorporateAction }) => {
           The Union of <br />
           <span className="gradient-text">Reality & Art</span>
         </h1>
+        <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 border border-primary/20 rounded-full mb-8">
+          <span className="material-symbols-outlined text-primary text-sm">verified</span>
+          <span className="text-xs font-black uppercase tracking-widest text-primary">First & Only Multimedia & App Studio in the World</span>
+        </div>
         <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-12">
           Led by <span className="text-gray-900 dark:text-white font-bold">Eric A. Molina Denegri</span>, we produce bold content for YouTube, Odysee, and social platforms, seeking to understand the human connection.
         </p>

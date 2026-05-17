@@ -513,6 +513,125 @@ const App: React.FC = () => {
           <div className="animate-fadeIn">
             <Hero onAction={() => changeTab('programs')} onCorporateAction={() => changeTab('services')} />
             
+            {/* STUDIO APPS SHOWCASE */}
+            <section id="studio-apps" className="max-w-7xl mx-auto px-4 py-32 border-y border-gray-100 dark:border-gray-800">
+               <div className="text-center mb-16">
+                  <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">Our Ecosystem</span>
+                  <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4">The Studio Apps</h2>
+                  <p className="text-lg text-gray-400 italic font-medium">Content meets technology — our apps power the Molina Universe</p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                  {/* TOY VERSE HQ */}
+                  <a href="https://toyverse-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
+                    <div className="aspect-square bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
+                      <div className="relative z-10 text-center">
+                        <span className="text-6xl">🧸</span>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Toy Verse HQ</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">Toys, collectibles, 3D prints, STL files, dioramas, history, videos, social media, games, and more.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {['3D Prints', 'STL Files', 'Dioramas', 'Collectibles', 'Games'].map(tag => (
+                          <span key={tag} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[9px] font-black uppercase rounded-full text-gray-400">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="mt-8 flex items-center gap-2 text-primary">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Explore Toy Verse</span>
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* VIBE X */}
+                  <a href="https://vibe-x-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
+                    <div className="aspect-square bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
+                      <div className="relative z-10 text-center">
+                        <span className="text-6xl">🎵</span>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Vibe X</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">Music, DJs, events, live streaming, shopping, artist exposure, and merch.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {['Music', 'DJs', 'Events', 'Live Stream', 'Merch'].map(tag => (
+                          <span key={tag} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[9px] font-black uppercase rounded-full text-gray-400">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="mt-8 flex items-center gap-2 text-secondary">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Explore Vibe X</span>
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* SAVVY PRICE */}
+                  <a href="https://price-n-inventory.vercel.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
+                    <div className="aspect-square bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
+                      <div className="relative z-10 text-center">
+                        <span className="text-6xl">💎</span>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Savvy Price</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">Find the treasure anywhere — price discovery, inventory management, and collector insights.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {['Pricing', 'Inventory', 'Collectors', 'Insights'].map(tag => (
+                          <span key={tag} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[9px] font-black uppercase rounded-full text-gray-400">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="mt-8 flex items-center gap-2 text-amber-600">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Explore Savvy Price</span>
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                      </div>
+                    </div>
+                  </a>
+               </div>
+
+               {/* CHANNELS ROW */}
+               <div className="mt-20 pt-16 border-t border-gray-100 dark:border-gray-800">
+                  <h3 className="text-center text-xl font-black uppercase tracking-tight mb-12">Our Content Channels</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                    <a href="https://www.youtube.com/@3volution_tv" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 p-8 bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 hover:border-red-500 hover:shadow-xl transition-all group">
+                      <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <svg viewBox="0 0 24 24" className="w-8 h-8 text-white fill-current"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">YouTube</p>
+                        <p className="text-xl font-black uppercase tracking-tight">@3volution_tv</p>
+                      </div>
+                      <span className="material-symbols-outlined text-gray-300 ml-auto group-hover:text-red-500 transition-colors">arrow_forward</span>
+                    </a>
+                    <a href="https://odysee.com/@3volution-TV:a" target="_blank" rel="noopener noreferrer" className="flex items-center gap-6 p-8 bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 hover:border-amber-500 hover:shadow-xl transition-all group">
+                      <div className="w-16 h-16 bg-amber-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <span className="material-symbols-outlined text-white text-3xl">live_tv</span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Odysee</p>
+                        <p className="text-xl font-black uppercase tracking-tight">@3volution-TV</p>
+                      </div>
+                      <span className="material-symbols-outlined text-gray-300 ml-auto group-hover:text-amber-500 transition-colors">arrow_forward</span>
+                    </a>
+                  </div>
+               </div>
+            </section>
+
             {/* CORE VALUES / NAVIGATION SECTION */}
             <section className="max-w-7xl mx-auto px-4 py-20 text-center">
               <h2 className="text-4xl md:text-5xl font-black mb-8 uppercase tracking-tighter">Our Purpose</h2>

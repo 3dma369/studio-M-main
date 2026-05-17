@@ -1,6 +1,59 @@
 
 import { Product, Program, SubscriptionTier, ServiceOffering, TeamMember, TimelineEvent, FeaturedMember } from './types';
 
+export const STUDIO_APPS = [
+  {
+    id: 'toyverse',
+    title: 'Toy Verse HQ',
+    description: 'Toys, 3D prints, STL files, dioramas, games, history, videos and social media for collectors.',
+    image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&q=80&w=800',
+    url: 'https://toyverse-app.web.app/',
+    icon: '🧸',
+    gradient: 'from-blue-900 to-purple-900',
+    tags: ['3D Prints', 'STL Files', 'Dioramas', 'Collectibles', 'Games', 'Social Media'],
+    color: 'primary'
+  },
+  {
+    id: 'vibex',
+    title: 'Vibe X',
+    description: 'Music, DJs, events, live streaming, artist exposure and merch shopping.',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800',
+    url: 'https://vibe-x-app.web.app/',
+    icon: '🎵',
+    gradient: 'from-purple-900 to-pink-900',
+    tags: ['Music', 'DJs', 'Events', 'Live Stream', 'Artist Platform', 'Merch'],
+    color: 'secondary'
+  },
+  {
+    id: 'savvyprice',
+    title: 'Savvy Price',
+    description: 'Find the treasure anywhere — price discovery, inventory management and collector insights.',
+    image: 'https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800',
+    url: 'https://price-n-inventory.vercel.app/',
+    icon: '💎',
+    gradient: 'from-amber-600 to-orange-700',
+    tags: ['Pricing', 'Inventory', 'Collectors', 'Insights', 'Discovery'],
+    color: 'amber-600'
+  }
+];
+
+export const CHANNELS = [
+  {
+    name: 'YouTube',
+    handle: '@3volution_tv',
+    url: 'https://www.youtube.com/@3volution_tv',
+    icon: 'play_circle',
+    color: 'red-500'
+  },
+  {
+    name: 'Odysee',
+    handle: '@3volution-TV',
+    url: 'https://odysee.com/@3volution-TV:a',
+    icon: 'live_tv',
+    color: 'amber-500'
+  }
+];
+
 export const PROGRAMS: Program[] = [
   {
     id: 'dating',
