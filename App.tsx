@@ -831,7 +831,27 @@ const App: React.FC = () => {
                <div className="lg:col-span-2 space-y-8">
                   <h2 className="text-6xl font-black mb-8 uppercase tracking-tighter leading-none">Reality Hub</h2>
                   <div className="aspect-video bg-black rounded-[4rem] overflow-hidden shadow-2xl relative border border-gray-100 dark:border-gray-800">
-                     <iframe className="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1" frameBorder="0" allowFullScreen></iframe>
+                     <iframe 
+                       className="w-full h-full" 
+                       src="https://www.youtube.com/embed/LO363deNNsA?autoplay=0&mute=0&controls=1&rel=0" 
+                       title="3volution_tv - Toy Verse HQ" 
+                       frameBorder="0" 
+                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                       allowFullScreen
+                     />
+                  </div>
+                  <div className="flex items-center gap-4 px-2">
+                     <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
+                       <svg viewBox="0 0 24 24" className="w-5 h-5 text-white fill-current"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                     </div>
+                     <div>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Now Playing</p>
+                       <p className="text-sm font-black uppercase">MARVEL: THE BILLION DOLLAR EMPIRE | Ep. 1 | Toy Verse HQ</p>
+                     </div>
+                     <a href="https://www.youtube.com/@3volution_tv/videos" target="_blank" rel="noopener noreferrer" className="ml-auto flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors">
+                       <span>All Videos</span>
+                       <span className="material-symbols-outlined text-sm">open_in_new</span>
+                     </a>
                   </div>
                   <div className="bg-white dark:bg-gray-900 rounded-[4rem] shadow-2xl h-[550px] flex flex-col overflow-hidden border border-gray-100 dark:border-gray-800">
                     <div className="flex-grow p-10 overflow-y-auto space-y-6 no-scrollbar">

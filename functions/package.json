@@ -1,0 +1,12 @@
+{
+  "name": "studio-m-functions",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.3.2",
+    "stripe": "^17.7.0"
+  }
+}
