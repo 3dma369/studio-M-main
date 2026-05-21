@@ -16,7 +16,7 @@ export const Hero: React.FC<HeroProps> = ({ onAction, onCorporateAction }) => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="inline-block px-4 py-1.5 mb-6 text-xs font-black uppercase tracking-[0.3em] bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500">
-          San Francisco • Multimedia Studio
+          San Francisco • TU Studio
         </h2>
         <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 leading-[0.9]">
           The Union of <br />

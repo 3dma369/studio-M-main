@@ -170,6 +170,7 @@ export enum SubscriptionTier {
   FAN = 'Fan',
   MEMBER = 'Member',
   PRO = 'Pro',
+  PLATINUM = 'Platinum',
   CORPORATE = 'Corporate'
 }
 

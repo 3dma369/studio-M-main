@@ -25,6 +25,17 @@ export const STUDIO_APPS = [
     color: 'secondary'
   },
   {
+    id: 'dp-park',
+    title: 'DP Park',
+    description: '3D park experiences, virtual tours, and immersive digital environments.',
+    image: 'https://images.unsplash.com/photo-1614850715649-1d0106293bd1?auto=format&fit=crop&q=80&w=800',
+    url: 'https://dp-park-main.vercel.app/',
+    icon: '🎢',
+    gradient: 'from-green-800 to-teal-900',
+    tags: ['3D Parks', 'Virtual Tours', 'Immersive', 'Digital Experience'],
+    color: 'green-600'
+  },
+  {
     id: 'savvyprice',
     title: 'Savvy Price',
     description: 'Find the treasure anywhere — price discovery, inventory management and collector insights.',
@@ -123,7 +134,7 @@ export const TEAM: TeamMember[] = [
   {
     name: 'Eric A. Molina Denegri',
     role: 'CEO & Creative Visionary',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300'
+    image: '/eric-portrait.jpg'
   },
   {
     name: 'Sarah Chen',
@@ -360,6 +371,11 @@ export const SUBSCRIPTIONS = [
     tier: SubscriptionTier.PRO,
     price: '29.99',
     features: ['All Member Features', 'Voting Rights', 'Access to Raw Project Files', 'Exclusive Producer Credits']
+  },
+  {
+    tier: SubscriptionTier.PLATINUM,
+    price: '99.99',
+    features: ['All Member + Pro Features', 'Lifetime Voting Rights', 'Platinum Exclusive Vault Access', 'Direct Line to Leadership', 'Annual Studio Retreat Invitation']
   },
   {
     tier: SubscriptionTier.CORPORATE,
