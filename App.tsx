@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { PROGRAMS, PRODUCTS, SUBSCRIPTIONS, SERVICES, TEAM, TIMELINE, CORE_VALUES, FEATURED_MEMBERS } from './constants';
+import { STUDIO_APPS, PROGRAMS, PRODUCTS, SUBSCRIPTIONS, SERVICES, TEAM, TIMELINE, CORE_VALUES, FEATURED_MEMBERS } from './constants';
 import { GeminiAssistant } from './services/geminiService';
 import { USERS_COLLECTION, userService } from './services/userService';
 import { stripeService } from './services/stripeService';
@@ -732,29 +732,111 @@ const App: React.FC = () => {
           </section>
         )}
 
-        {activeTab === 'shop' && (
+        {activeTab === 'products' && (
           <section className="max-w-7xl mx-auto px-4 py-24 animate-fadeIn">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
-              <h2 className="text-7xl font-black tracking-tighter uppercase leading-none">Studio Shop</h2>
-              <div className="flex gap-2">
-                 {['All', 'Dating', 'Toys', 'Food'].map(cat => (
-                   <button key={cat} onClick={() => setShopFilter(cat)} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase border transition-all ${shopFilter === cat ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white dark:bg-gray-900 text-gray-400 border-gray-100 dark:border-gray-800'}`}>{cat}</button>
-                 ))}
+            <div className="text-center mb-20">
+              <h2 className="text-7xl font-black uppercase mb-6 leading-none tracking-tighter">Our Products</h2>
+              <p className="text-xl text-gray-400 font-medium italic">Apps, Programs & Merchandise</p>
+            </div>
+
+            {/* APPS */}
+            <div className="mb-24">
+              <div className="flex items-center gap-4 mb-12">
+                <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white"><span className="material-symbols-outlined text-2xl">apps</span></div>
+                <h3 className="text-4xl font-black uppercase tracking-tighter">Apps</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                {STUDIO_APPS.map(app => (
+                  <a key={app.id} href={app.url} target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
+                    <div className={`aspect-square bg-gradient-to-br ${app.gradient} flex items-center justify-center relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" style={{ backgroundImage: `url('${app.image}')` }} />
+                      <div className="relative z-10 text-center">
+                        <span className="text-6xl">{app.icon}</span>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-3">{app.title}</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">{app.description}</p>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {app.tags.map(tag => (
+                          <span key={tag} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[9px] font-black uppercase rounded-full text-gray-400">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 text-primary">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Open App</span>
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                      </div>
+                    </div>
+                  </a>
+                ))}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-              {filteredProducts.map(p => (
-                <div key={p.id} onClick={() => setSelectedProduct(p)} className="bg-white dark:bg-gray-900 rounded-[3rem] p-6 border border-gray-100 dark:border-gray-800 group cursor-pointer shadow-xl hover:-translate-y-2 transition-all">
-                  <div className="aspect-square w-full rounded-[2rem] overflow-hidden mb-6 relative shadow-lg">
-                     <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={p.name} />
+
+            {/* PROGRAMS */}
+            <div className="mb-24">
+              <div className="flex items-center gap-4 mb-12">
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white"><span className="material-symbols-outlined text-2xl">play_circle</span></div>
+                <h3 className="text-4xl font-black uppercase tracking-tighter">Programs</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {PROGRAMS.filter(p => p.platform === 'YouTube' || p.platform === 'Odysee').map(program => (
+                  <div key={program.id} className="bg-white dark:bg-gray-900 rounded-[3rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl hover:-translate-y-2 transition-all group">
+                    <div className="aspect-video bg-gradient-to-br from-gray-900 to-black relative overflow-hidden">
+                      <img src={program.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" alt={program.title} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-white text-3xl">play_arrow</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest">{program.platform}</span>
+                      </div>
+                    </div>
+                    <div className="p-8">
+                      <span className="text-[10px] font-black uppercase text-primary tracking-widest">{program.category}</span>
+                      <h3 className="text-xl font-black uppercase mt-2 mb-3 tracking-tight">{program.title}</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed">{program.description}</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black mb-2 uppercase truncate tracking-tight">{p.name}</h3>
-                  <div className="flex items-center justify-between mt-6">
-                     <p className="text-2xl font-black text-primary tracking-tighter">${p.price}</p>
-                     <button onClick={(e) => { e.stopPropagation(); addToCart(p); }} className="px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg">Secure</button>
+                ))}
+              </div>
+              <div className="mt-12 text-center">
+                <p className="text-gray-400 font-medium italic mb-6">More programs coming soon...</p>
+                <a href="https://www.youtube.com/@3volution_tv" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-full font-black uppercase text-sm tracking-widest hover:bg-red-700 transition-colors shadow-xl">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.376.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.376-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                  Watch on YouTube
+                </a>
+              </div>
+            </div>
+
+            {/* MERCH */}
+            <div>
+              <div className="flex items-center gap-4 mb-12">
+                <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center text-white"><span className="material-symbols-outlined text-2xl">shopping_bag</span></div>
+                <h3 className="text-4xl font-black uppercase tracking-tighter">Merchandising</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                {['Hoodies', 'T-Shirts', 'Sunglasses', 'Caps'].map((item, i) => (
+                  <div key={item} className="bg-white dark:bg-gray-900 rounded-[2.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-xl hover:-translate-y-2 transition-all group">
+                    <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                      <span className="text-6xl opacity-50 group-hover:opacity-80 transition-opacity">
+                        {item === 'Hoodies' ? '🧥' : item === 'T-Shirts' ? '👕' : item === 'Sunglasses' ? '🕶️' : '🧢'}
+                      </span>
+                    </div>
+                    <div className="p-6 text-center">
+                      <h4 className="text-lg font-black uppercase mb-1">{item}</h4>
+                      <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Coming Soon</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="mt-12 text-center">
+                <p className="text-gray-400 font-medium italic">Merchandise drop incoming — join the crew to get early access.</p>
+              </div>
             </div>
           </section>
         )}
@@ -764,7 +846,7 @@ const App: React.FC = () => {
             <div className="text-center mb-20"><h2 className="text-7xl font-black tracking-tighter uppercase mb-6 leading-none">Membership</h2><p className="text-xl text-gray-400 font-medium italic">Join the Molina Multimedia inner circle.</p></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
               {SUBSCRIPTIONS.map((s, i) => (
-                <div key={i} className={`p-10 rounded-[3rem] border flex flex-col transition-all hover:shadow-2xl ${s.tier === SubscriptionTier.PRO ? 'bg-primary text-white scale-105 shadow-2xl z-10 border-transparent' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'}`}>
+                <div key={i} className={`p-10 rounded-[3rem] border flex flex-col transition-all hover:shadow-2xl ${s.tier === SubscriptionTier.PRO || s.tier === SubscriptionTier.PLATINUM ? 'bg-primary text-white scale-105 shadow-2xl z-10 border-transparent' : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'}`}>
                   <h3 className="text-2xl font-black mb-2 uppercase tracking-tighter">{s.tier}</h3>
                   
                   <div className="mb-10 h-28 flex flex-col justify-center">
@@ -815,12 +897,91 @@ const App: React.FC = () => {
                       description: `Establishing ${s.tier} access.`, 
                       program: 'General' 
                     })} 
-                    className={`w-full py-5 rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-xl ${s.tier === SubscriptionTier.PRO ? 'bg-white text-primary' : 'bg-primary text-white shadow-primary/20'}`}
+                    className={`w-full py-5 rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-xl ${s.tier === SubscriptionTier.PRO || s.tier === SubscriptionTier.PLATINUM ? 'bg-white text-primary' : 'bg-primary text-white shadow-primary/20'}`}
                   >
                     Establish Union
                   </button>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'mission' && (
+          <section className="max-w-7xl mx-auto px-4 py-24 animate-fadeIn">
+            <div className="text-center mb-20">
+              <span className="inline-block px-4 py-1.5 mb-6 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">Our Foundation</span>
+              <h2 className="text-7xl font-black uppercase mb-6 leading-none tracking-tighter">Mission & Vision</h2>
+              <p className="text-xl text-gray-400 font-medium italic max-w-3xl mx-auto">"The understanding and union of reality, communication art, and humankind."</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-16 mb-24">
+              {/* Mission */}
+              <div className="bg-white dark:bg-gray-900 p-14 rounded-[4rem] border border-gray-100 dark:border-gray-800 shadow-2xl">
+                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-10"><span className="material-symbols-outlined text-5xl">rocket_launch</span></div>
+                <h3 className="text-4xl font-black uppercase mb-6 tracking-tighter">Mission</h3>
+                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed italic">"To produce bold content for YouTube, Odysee, and social platforms that bridges the gap between reality and the human spirit through innovative multimedia storytelling."</p>
+              </div>
+              {/* Vision */}
+              <div className="bg-white dark:bg-gray-900 p-14 rounded-[4rem] border border-gray-100 dark:border-gray-800 shadow-2xl">
+                <div className="w-20 h-20 bg-secondary/10 rounded-3xl flex items-center justify-center text-secondary mb-10"><span className="material-symbols-outlined text-5xl">visibility</span></div>
+                <h3 className="text-4xl font-black uppercase mb-6 tracking-tighter">Vision</h3>
+                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed italic">"To be the world's first and only multimedia studio — a creative force that redefines how reality and art intersect, connecting humankind through powerful visual narratives."</p>
+              </div>
+            </div>
+
+            {/* Founder Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-[4rem] p-14 border border-gray-100 dark:border-gray-800 shadow-2xl">
+              <div className="flex flex-col md:flex-row items-center gap-16">
+                <div className="shrink-0">
+                  <div className="w-60 h-60 rounded-[3rem] overflow-hidden shadow-2xl border-4 border-primary/20">
+                    <img src="/eric-portrait.jpg" alt="Eric A. Molina Denegri" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <div className="flex-grow text-center md:text-left">
+                  <span className="inline-block px-4 py-1.5 mb-4 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">Founder & CEO</span>
+                  <h3 className="text-5xl font-black uppercase mb-4 tracking-tighter leading-none">Eric A. Molina Denegri</h3>
+                  <p className="text-xl text-secondary font-black uppercase tracking-widest mb-6">Creative Visionary & Architect</p>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium italic text-lg leading-relaxed max-w-xl">"Reality and art are not separate — they are one. The studio exists to make that connection visible, powerful, and meaningful to every person who experiences our work."</p>
+                  <div className="mt-8 flex flex-wrap gap-3 justify-center md:justify-start">
+                    {['YouTube', 'Odysee', 'Instagram', 'LinkedIn'].map(s => (
+                      <span key={s} className="px-5 py-2 bg-gray-50 dark:bg-gray-800 text-[10px] font-black uppercase rounded-full text-gray-400">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Team */}
+            <div className="mt-24">
+              <h3 className="text-4xl font-black uppercase mb-12 tracking-tighter text-center">Executive Leadership</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+                {TEAM.map((member, i) => (
+                  <div key={i} className="bg-white dark:bg-gray-900 rounded-[3rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl text-center group hover:-translate-y-2 transition-all">
+                    <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-6 border-4 border-primary/20 p-1">
+                      <img src={member.image} alt={member.name} className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <h4 className="text-xl font-black uppercase tracking-tight mb-1">{member.name}</h4>
+                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">{member.role}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="mt-24">
+              <h3 className="text-4xl font-black uppercase mb-12 tracking-tighter text-center">Studio History</h3>
+              <div className="space-y-8">
+                {TIMELINE.map((event, i) => (
+                  <div key={i} className="flex gap-8 items-start bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl">
+                    <div className="shrink-0 w-20 h-20 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">{event.year}</div>
+                    <div>
+                      <h4 className="text-2xl font-black uppercase mb-2 tracking-tight">{event.title}</h4>
+                      <p className="text-gray-500 font-medium italic">{event.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -873,10 +1034,16 @@ const App: React.FC = () => {
                              <button key={emoji} onClick={() => sendChatMessage(emoji)} className="text-xl hover:scale-125 transition-transform">{emoji}</button>
                           ))}
                        </div>
+                       {(!isLoggedIn || !userProfile?.activeSubscription) ? (
+                         <div className="flex items-center justify-center py-4 bg-primary/10 rounded-3xl border border-primary/20">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Upgrade to Fan ($5+) to unlock chat</p>
+                         </div>
+                       ) : (
                        <div className="flex gap-4">
                           <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChatMessage()} className="flex-grow px-8 py-5 bg-white dark:bg-gray-800 rounded-3xl border-none text-sm font-bold shadow-inner" placeholder="Transmit thoughts to the hub..." />
                           <button onClick={() => sendChatMessage()} className="w-14 h-14 flex items-center justify-center bg-primary text-white rounded-[1.5rem] shadow-xl shadow-primary/30 active:scale-90 transition-all"><span className="material-symbols-outlined">send</span></button>
                        </div>
+                       )}
                     </div>
                   </div>
                </div>
@@ -907,7 +1074,7 @@ const App: React.FC = () => {
                    </div>
                    <div className="flex items-center gap-6">
                       <div className="w-16 h-16 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] flex items-center justify-center text-primary shadow-lg border border-gray-100 dark:border-gray-800"><span className="material-symbols-outlined text-3xl">alternate_email</span></div>
-                      <div><p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Direct Portal</p><p className="font-black text-xl uppercase tracking-tighter">admin@molina.media</p></div>
+                      <div><p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Email</p><a href="mailto:contact@tu-studio.com" className="font-black text-xl uppercase tracking-tighter hover:text-primary transition-colors">Contact Us</a></div>
                    </div>
                 </div>
               </div>
@@ -1297,11 +1464,11 @@ const App: React.FC = () => {
       {showLoginModal && (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setShowLoginModal(false)} />
-          <div className="relative bg-white dark:bg-gray-950 w-full max-w-xl p-10 md:p-14 rounded-[4rem] shadow-2xl animate-scaleIn border border-white/5 overflow-hidden">
-             <div className="text-center mb-10">
-                <div className="w-24 h-24 bg-primary rounded-[2rem] mx-auto flex items-center justify-center text-white mb-8 shadow-2xl shadow-primary/40 rotate-3"><span className="material-symbols-outlined text-6xl font-black">play_circle</span></div>
-                <h3 className="text-5xl font-black tracking-tighter mb-3 uppercase leading-none">{authMode === 'login' ? 'Studio Portal' : 'Create Identity'}</h3>
-                <p className="text-[10px] font-black uppercase text-gray-500 tracking-[0.4em]">{authMode === 'login' ? 'Access the Union of Reality & Art' : 'Join the Molina Multimedia Network'}</p>
+          <div className="relative bg-white dark:bg-gray-950 w-full max-w-md p-5 md:p-6 rounded-[2rem] shadow-2xl animate-scaleIn border border-white/5 overflow-y-auto max-h-[95vh] no-scrollbar">
+             <div className="text-center mb-4">
+                <div className="w-14 h-14 bg-primary rounded-[1.5rem] mx-auto flex items-center justify-center text-white mb-4 shadow-xl shadow-primary/40 rotate-3"><span className="material-symbols-outlined text-3xl font-black">play_circle</span></div>
+                <h3 className="text-2xl md:text-3xl font-black tracking-tighter mb-1 uppercase leading-none">{authMode === 'login' ? 'Studio Portal' : 'Create Identity'}</h3>
+                <p className="text-[8px] font-black uppercase text-gray-500 tracking-[0.2em]">{authMode === 'login' ? 'Access the Union of Reality & Art' : 'Join the Molina Multimedia Network'}</p>
              </div>
              
              <form onSubmit={handleLogin} className="space-y-6">
