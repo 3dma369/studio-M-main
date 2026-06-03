@@ -18,6 +18,9 @@ export const Hero: React.FC<HeroProps> = ({ onAction, onCorporateAction }) => {
         <h2 className="inline-block px-4 py-1.5 mb-6 text-xs font-black uppercase tracking-[0.3em] bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500">
           San Francisco • TU Studio
         </h2>
+        <div className="flex justify-center mb-6">
+          <img src="/logo.png" alt="TU Studio" className="h-64 sm:h-80 object-contain" />
+        </div>
         <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 leading-[0.9]">
           The Union of <br />
           <span className="gradient-text">Reality & Art</span>
