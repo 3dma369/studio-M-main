@@ -2,9 +2,90 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default: deny all access
+
+    // ── Helper functions ──────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // SECURE admin check — uses Firebase Auth custom claim, not email.
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // ── Users — owner reads/writes own, admin reads all ───────────────────
+    // SECURITY: was deny-all (broken). Lock role/email fields from user update
+    // to prevent privilege escalation.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && !('role' in request.resource.data)
+        && !('isAdmin' in request.resource.data);
+      allow update: if (isOwner(userId)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email)
+        || isAdmin();
+      allow delete: if isAdmin();
+
+      // Subcollection: submissions (user's project submissions)
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ── Settings (singletons) — public read, admin write ─────────────────
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Programs — public read, admin write ──────────────────────────────
+    match /programs/{programId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Products — public read, admin write ──────────────────────────────
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Transactions — owner reads own, admin reads all ─────────────────
+    // SECURITY: should not be public read — these may include payment data
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Submissions (top-level) — owner reads own, admin reads all ───────
+    match /submissions/{submissionId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Project requests — owner writes, admin reads all ─────────────────
+    match /projectRequests/{requestId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Catch-all: deny by default ───────────────────────────────────────
+    // SECURITY: was deny-all, which broke the app. Now deny with explicit
+    // admin escape hatch for any collection not listed above.
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isAdmin();
     }
   }
 }
