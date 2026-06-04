@@ -11,8 +11,34 @@ import { web3Service } from './services/web3Service';
 import { UserProfile, Product, Program, UserRole, ChatMessage, ServiceOffering, CartItem, FundSource, SubscriptionTier, TalentSubmission, FeaturedMember, Transaction, Agreement, PayoutAccount, StudioSettings, CryptoOption, DigitalWallet } from './types';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Read initial tab from URL — enables deep linking to /programs, /services, etc.
+    const path = window.location.pathname.replace(/^\/+/, '').toLowerCase();
+    const validTabs = ['home', 'programs', 'services', 'products', 'membership', 'mission', 'community', 'contact', 'profile', 'admin'];
+    return validTabs.includes(path) ? path : 'home';
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Sync activeTab to URL on change (without page reload)
+  useEffect(() => {
+    const newPath = activeTab === 'home' ? '/' : `/${activeTab}`;
+    if (window.location.pathname !== newPath) {
+      window.history.replaceState(null, '', newPath);
+    }
+  }, [activeTab]);
+
+  // Listen for browser back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname.replace(/^\/+/, '').toLowerCase() || 'home';
+      const validTabs = ['home', 'programs', 'services', 'products', 'membership', 'mission', 'community', 'contact', 'profile', 'admin'];
+      if (validTabs.includes(path)) {
+        setActiveTab(path);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [loginRole, setLoginRole] = useState<UserRole>('Subscriber');
@@ -267,8 +293,13 @@ const App: React.FC = () => {
   const askAI = async () => {
     if (!aiInput) return;
     setAiResponse("Connecting to the multimedia core...");
-    const res = await gemini.getRecommendations(aiInput);
-    setAiResponse(res || "");
+    try {
+      const res = await gemini.getRecommendations(aiInput);
+      setAiResponse(res || "");
+    } catch (err: any) {
+      console.error('[AI] getRecommendations failed:', err);
+      setAiResponse(`⚠️ AI assistant is offline. ${err?.message || 'Please try again later.'}`);
+    }
   };
 
   const sendChatMessage = (text?: string) => {
