@@ -1,0 +1,60 @@
+name: T.U Security Scan
+
+on:
+  push:
+    branches: [main, security-fix-critical-20260604]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run T.U deep scan
+        run: |
+          # Install Python (comes with ubuntu-latest)
+          python3 -V
+          # Pull the latest scan script
+          wget -q https://raw.githubusercontent.com/3dma369/T.U-Security-Main/main/deep_scan.py \
+            -O /tmp/deep_scan.py
+          # (fallback: copy from the action repo or include inline)
+          # If pull fails, fail the action
+          if [ ! -f /tmp/deep_scan.py ]; then
+            echo "::error::Failed to fetch deep_scan.py"
+            exit 1
+          fi
+          python3 /tmp/deep_scan.py
+
+      - name: Block on real secret patterns in source
+        run: |
+          # Block any push containing Stripe sk_live_, AWS, GitHub PAT, etc.
+          if grep -rE "sk_live_[0-9a-zA-Z]{24,}|AKIA[0-9A-Z]{16}|ghp_[0-9a-zA-Z]{36}" \
+            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" \
+            --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git .; then
+            echo "::error::Real secret pattern detected in source. Move to ~/.tangible-union-secrets/ and use env."
+            exit 1
+          fi
+
+      - name: Verify vercel.json has security headers
+        run: |
+          if [ -f "vercel.json" ]; then
+            missing=""
+            for h in "Strict-Transport-Security" "X-Content-Type-Options" "X-Frame-Options"; do
+              if ! grep -q "$h" vercel.json; then
+                missing="$missing $h"
+              fi
+            done
+            if [ -n "$missing" ]; then
+              echo "::error::vercel.json is missing security headers:$missing"
+              exit 1
+            fi
+            echo "✅ vercel.json has all 3 required security headers"
+          fi

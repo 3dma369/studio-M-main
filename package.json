@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prebuild": "python3 /Users/333e/.fleet-mesh/cto/security/pre_deploy_gate.py",
+    "security:scan": "python3 /Users/333e/.fleet-mesh/cto/security/deep_scan.py"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
