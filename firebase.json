@@ -39,6 +39,24 @@
         ]
       },
       {
+        "source": "**/*.@(png|jpg|jpeg|webp|gif|svg|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "logos/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        ]
+      },
+      {
         "source": "**",
         "headers": [
           {
