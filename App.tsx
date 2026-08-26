@@ -64,6 +64,21 @@ const App: React.FC = () => {
   const submittingRef = useRef(false); // sync guard against rapid double-clicks
   const [toast, setToast] = useState<{msg: string; kind: 'success'|'warn'|'error'}|null>(null);
 
+  // File upload limits — surfaced to user BEFORE upload so they're never surprised.
+  // Inline base64 attach is capped at 1.8MB to stay under Firestore doc size limit.
+  // Storage rule (storage.rules) allows up to 50MB but we keep user cap consistent
+  // with the inline path until Storage bucket is enabled in the project console.
+  const MAX_ATTACH_BYTES = 1800000; // ~1.8MB
+  const MAX_ATTACH_LABEL = '1.8 MB';
+  function byteFormat(n: number): string {
+    if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(2) + ' MB';
+    if (n >= 1024) return Math.round(n / 1024) + ' KB';
+    return n + ' B';
+  }
+  function emailValid(v: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+
   // Auto-dismiss toast after 5s
   useEffect(() => {
     if (!toast) return;
@@ -1751,6 +1766,24 @@ const App: React.FC = () => {
                 submittingRef.current = true;
                 setIsSubmitting(true);
                 const form = e.currentTarget as HTMLFormElement;
+
+                // --- HARD VALIDATION GATE (also runs from the button click below) ---
+                const nameVal = (form[0] as HTMLInputElement).value.trim();
+                const emailVal = (form[1] as HTMLInputElement).value.trim();
+                const disciplineVal = (form[2] as HTMLSelectElement).value;
+                const bioVal = (form[3] as HTMLTextAreaElement).value.trim();
+                if (!nameVal) { showToast('Please enter your legal name so admin can address you.', 'error'); setIsSubmitting(false); submittingRef.current = false; return; }
+                if (!emailValid(emailVal)) { showToast('That email is not valid. We need a real address (you@domain.com) to reply to your submission.', 'error'); setIsSubmitting(false); submittingRef.current = false; (form[1] as HTMLInputElement).focus(); return; }
+                if (!disciplineVal) { showToast('Pick a discipline so we can route your vision to the right room.', 'error'); setIsSubmitting(false); submittingRef.current = false; return; }
+                if (bioVal.length < 20) { showToast('Tell us a little more about your specialty (at least 20 characters).', 'error'); setIsSubmitting(false); submittingRef.current = false; return; }
+                // File-size gate BEFORE upload so user is never surprised by a silent failure.
+                if (submissionFile && submissionFile.size > MAX_ATTACH_BYTES) {
+                  showToast(`File too large (${byteFormat(submissionFile.size)}). Maximum attachment is ${MAX_ATTACH_LABEL}. Please resize or pick a smaller file before submitting.`, 'error');
+                  setIsSubmitting(false);
+                  submittingRef.current = false;
+                  return;
+                }
+
                 const file = submissionFile;
                 let fileUrl = '';
                 let fileData = ''; // inline base64 fallback so admin can ALWAYS see the attachment
@@ -1847,10 +1880,30 @@ const App: React.FC = () => {
                 </select>
                 <textarea className="w-full bg-gray-50 dark:bg-black border-none rounded-[2.5rem] p-8 h-32 text-sm font-bold shadow-inner resize-none" placeholder="Describe your creative specialty, philosophy, and what you want to build in The Collective..." required />
                 <div className="p-10 border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem] text-center group cursor-pointer hover:border-primary transition-all">
-                   <input type="file" onChange={e => setSubmissionFile(e.target.files?.[0] || null)} className="hidden" id="file-upload" />
+                   <input type="file" onChange={e => {
+                       const f = e.target.files?.[0] || null;
+                       if (f && f.size > MAX_ATTACH_BYTES) {
+                         showToast(`File too large (${byteFormat(f.size)}). Max attachment is ${MAX_ATTACH_LABEL}.`, 'error');
+                         // clear the field so the user must pick again
+                         e.target.value = '';
+                         setSubmissionFile(null);
+                         return;
+                       }
+                       setSubmissionFile(f);
+                     }} className="hidden" id="file-upload" accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.csv,.txt" />
                    <label htmlFor="file-upload" className="cursor-pointer block">
                       <span className="material-symbols-outlined text-5xl text-gray-200 group-hover:text-primary transition-colors mb-3 block">cloud_upload</span>
-                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{submissionFile ? submissionFile.name : "Attach Reel / Portfolio Assets"}</span>
+                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest block">
+                        {submissionFile ? `${submissionFile.name} · ${byteFormat(submissionFile.size)}` : "Attach Reel / Portfolio Assets"}
+                      </span>
+                      <span className="text-[9px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-widest block mt-2">
+                        Max {MAX_ATTACH_LABEL} · Images · Video · PDF · Docs
+                      </span>
+                      {submissionFile && submissionFile.size > MAX_ATTACH_BYTES * 0.8 && (
+                        <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest block mt-2">
+                          ⚠ Near {MAX_ATTACH_LABEL} cap — admin will receive the full file
+                        </span>
+                      )}
                    </label>
                 </div>
                 <div className="flex gap-6 pt-4">
@@ -1859,7 +1912,30 @@ const App: React.FC = () => {
                   ev.preventDefault();
                   const form = ev.currentTarget.closest('form');
                   if (!form) return;
-                  // Trigger the form's submit handler explicitly
+                  // Run the browser's own constraint validation (catches type=email etc.)
+                  if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                  }
+                  // Hard validation gate from the form's submit handler too.
+                  // We duplicate key checks here so the button can never bypass via requestSubmit.
+                  const emailEl = form.querySelector('input[type="email"]') as HTMLInputElement | null;
+                  const bioEl = form.querySelector('textarea') as HTMLTextAreaElement | null;
+                  if (emailEl && !emailValid(emailEl.value)) {
+                    showToast('That email is not valid. We need a real address (you@domain.com) to reply to your submission.', 'error');
+                    emailEl.focus();
+                    return;
+                  }
+                  if (bioEl && bioEl.value.trim().length < 20) {
+                    showToast('Tell us a little more about your specialty (at least 20 characters).', 'error');
+                    bioEl.focus();
+                    return;
+                  }
+                  if (submissionFile && submissionFile.size > MAX_ATTACH_BYTES) {
+                    showToast(`File too large (${byteFormat(submissionFile.size)}). Maximum attachment is ${MAX_ATTACH_LABEL}.`, 'error');
+                    return;
+                  }
+                  // Now safe to submit
                   const propsKey = Object.keys(form).find(k => k.startsWith('__reactProps'));
                   if (propsKey && form[propsKey].onSubmit) {
                     form[propsKey].onSubmit({ preventDefault: () => {}, currentTarget: form });
