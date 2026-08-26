@@ -684,7 +684,7 @@ const App: React.FC = () => {
                     <div className="aspect-square bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
                       <div className="relative z-10 text-center">
-                        <span className="text-6xl">💎</span>
+                        <img src="/logos/savvy-price.png" alt="Savvy Price" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto" style={{ mixBlendMode: 'normal' }} />
                         <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
                           <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
                           <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
