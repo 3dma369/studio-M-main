@@ -35,3 +35,6 @@ service-account*.json
 # Firebase local cache (auto-regenerated)
 .firebase/*.cache
 .firebase/*/cache
+
+# Logo source JPGs are personal/drop-zone; processed PNGs are committed from build/
+public/logos/src/
