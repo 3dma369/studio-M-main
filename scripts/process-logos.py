@@ -48,45 +48,60 @@ def feather_alpha(rgb_min: int) -> int:
     return int((WHITE_THRESHOLD - rgb_min) * 255 / span)
 
 
-def strip_white(src_jpg: Path, out_png: Path) -> None:
+def strip_with_corner_fill(src_jpg: Path, out_png: Path) -> None:
+    """Corner flood-fill + interior-blob removal using scipy.ndimage.
+
+    Why this works: a JPEG logo dropped from any chat app has white space
+    surrounding the actual logo. The white space touches the image edges,
+    so we flood-fill from the four corners and mark ALL edge-connected
+    white pixels as transparent. After that pass we still have interior
+    white blobs (e.g. white text on a transparent badge) which we keep
+    by removing only those smaller than the largest non-white component.
+    """
+    from scipy import ndimage
+    import numpy as np
+
     img = Image.open(src_jpg).convert('RGBA')
-    px = img.load()
-    w, h = img.size
+    arr = np.array(img)
+    h, w = arr.shape[:2]
+    r = arr[:, :, 0].astype(int)
+    g = arr[:, :, 1].astype(int)
+    b = arr[:, :, 2].astype(int)
 
-    # 1) White-strip pass
-    for y in range(h):
-        for x in range(w):
-            r, g, b, _ = px[x, y]
-            mn = min(r, g, b)
-            new_a = feather_alpha(mn)
-            if new_a == 0:
-                px[x, y] = (r, g, b, 0)
-            else:
-                # Pre-blend: light pixels become lighter so feathered edge fades gracefully
-                px[x, y] = (r, g, b, new_a)
+    # 1) Mask of near-white pixels
+    is_white = (r >= 240) & (g >= 240) & (b >= 240)
 
-    # 2) Find tight bbox of opaque content
-    minx, miny, maxx, maxy = w, h, -1, -1
-    for y in range(h):
-        for x in range(w):
-            r, g, b, a = px[x, y]
-            if a > 100:
-                minx = min(minx, x); maxx = max(maxx, x)
-                miny = min(miny, y); maxy = max(maxy, y)
+    # 2) Label connected white regions; mark edge-touching ones
+    labels, _ = ndimage.label(is_white)
+    edge_labels = {labels[y, x] for (x, y) in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)]}
+    edge_white = np.isin(labels, list(edge_labels))
+    arr[:, :, 3] = np.where(edge_white, 0, arr[:, :, 3])
 
-    if maxx < 0:
-        print(f'  {src_jpg.name}: no opaque pixels found — skipping')
+    # 3) Interior white blobs smaller than the largest non-white region: kill them too
+    op_mask = arr[:, :, 3] > 50
+    r0 = arr[:, :, 0].astype(int)
+    g0 = arr[:, :, 1].astype(int)
+    b0 = arr[:, :, 2].astype(int)
+    interior_white = op_mask & (r0 >= 210) & (g0 >= 210) & (b0 >= 210)
+    non_white = op_mask & ~interior_white
+    non_white_labels, n_non = ndimage.label(non_white)
+    if n_non > 0:
+        sizes = ndimage.sum(non_white, non_white_labels, range(1, n_non + 1))
+        biggest = int(np.argmax(sizes)) + 1
+        biggest_mask = non_white_labels == biggest
+        kill = interior_white & ~biggest_mask
+        arr[:, :, 3] = np.where(kill, 0, arr[:, :, 3])
+
+    # 4) Tight crop to opaque bbox + padding
+    op = arr[:, :, 3] > 100
+    ys, xs = np.where(op)
+    if len(ys) == 0:
+        print(f'  {src_jpg.name}: no opaque content found')
         return
-
-    # 3) Tight crop with padding
-    minx = max(0, minx - PADDING)
-    miny = max(0, miny - PADDING)
-    maxx = min(w - 1, maxx + PADDING)
-    maxy = min(h - 1, maxy + PADDING)
-    cropped = img.crop((minx, miny, maxx + 1, maxy + 1))
-    cropped.save(out_png, 'PNG', optimize=True)
-    print(f'  {src_jpg.name} → {out_png.name}: tight {cropped.size}, '
-          f'{os.path.getsize(out_png):,} bytes')
+    y0, y1 = max(0, ys.min() - PADDING), min(h - 1, ys.max() + PADDING)
+    x0, x1 = max(0, xs.min() - PADDING), min(w - 1, xs.max() + PADDING)
+    cropped = arr[y0:y1 + 1, x0:x1 + 1, :]
+    Image.fromarray(cropped, 'RGBA').save(out_png, 'PNG', optimize=True)
 
 
 def main():
@@ -103,7 +118,7 @@ def main():
             print(f'  skip {src_base}.jpg (not found)')
             continue
         out_png = OUT_DIR / out_name
-        strip_white(src_jpg, out_png)
+        strip_with_corner_fill(src_jpg, out_png)
     return 0
 
 
