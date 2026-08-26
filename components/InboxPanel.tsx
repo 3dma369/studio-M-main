@@ -20,8 +20,11 @@ type Submission = {
   type?: string;
   fileName?: string;
   fileUrl?: string;
+  fileData?: string; // inline base64 fallback when Storage is unavailable
   fileType?: string;
   fileSize?: number;
+  uploadFailed?: boolean;
+  uploadSkipped?: boolean;
 };
 
 export function InboxPanel({ db, userId }: { db: any; userId: string }) {
@@ -303,11 +306,40 @@ export function InboxPanel({ db, userId }: { db: any; userId: string }) {
                       )}
                     </div>
                   </div>
+                ) : selected.fileData ? (
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Attachment (inline — Storage offline)</p>
+                    <div className="space-y-3">
+                      {selected.fileData.startsWith('data:image/') ? (
+                        <img src={selected.fileData} alt={selected.fileName} className="w-full rounded-2xl border-2 border-gray-200 dark:border-gray-800" />
+                      ) : (
+                        <a
+                          href={selected.fileData}
+                          download={selected.fileName}
+                          className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-100 dark:border-gray-800 hover:border-primary group"
+                        >
+                          <span className="material-symbols-outlined text-4xl text-primary">{selected.fileType === 'Reel' ? 'movie' : 'description'}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-black truncate">{selected.fileName}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                              {selected.fileType} · {Math.round((selected.fileSize || 0) / 1024)} KB · embedded
+                            </p>
+                          </div>
+                          <span className="material-symbols-outlined text-gray-300 group-hover:text-primary">download</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 ) : selected.fileName && selected.fileName !== 'No File' ? (
                   <div>
                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Attachment</p>
+                    {selected.uploadFailed && (
+                      <p className="text-[10px] text-amber-500 font-bold mb-2">⚠ File upload failed (Storage bucket not enabled) — re-enable Storage in Firebase Console to receive files.</p>
+                    )}
+                    {selected.uploadSkipped && (
+                      <p className="text-[10px] text-amber-500 font-bold mb-2">⚠ File too large for inline attach (&gt;1.8MB) and Storage offline.</p>
+                    )}
                     <p className="text-sm font-bold">📎 {selected.fileName}</p>
-                    <p className="text-[10px] text-gray-400 italic mt-1">Uploaded before file storage was enabled — file not retained.</p>
                   </div>
                 ) : null}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-800 space-y-3">

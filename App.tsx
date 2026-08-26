@@ -1753,22 +1753,45 @@ const App: React.FC = () => {
                 const form = e.currentTarget as HTMLFormElement;
                 const file = submissionFile;
                 let fileUrl = '';
+                let fileData = ''; // inline base64 fallback so admin can ALWAYS see the attachment
                 let uploadFailed = false;
+                let uploadSkipped = false;
                 if (file) {
+                  // Try Firebase Storage first (6s budget, generous for warm bucket)
                   try {
                     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
                     const path = `submissions/${Date.now()}_${safeName}`;
                     const r = storageRef(getStorage(), path);
-                    // Hard 8s timeout on upload so the form never hangs forever.
-                    await Promise.race([
-                      uploadBytes(r, file).then(async () => {
-                        fileUrl = await getDownloadURL(r);
-                      }),
-                      new Promise((_, rej) => setTimeout(() => rej(new Error('Upload timed out (8s)')), 8000))
-                    ]);
+                    const uploadPromise = uploadBytes(r, file).then(async () => {
+                      fileUrl = await getDownloadURL(r);
+                    });
+                    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Upload timed out (6s)')), 6000));
+                    await Promise.race([uploadPromise, timeout]);
                   } catch (err: any) {
+                    console.warn('[collect] storage upload failed, falling back to inline:', err?.message || err);
                     uploadFailed = true;
-                    console.error('[collect] file upload failed:', err?.message || err);
+                  }
+                  // Inline base64 fallback — works regardless of Storage bucket state.
+                  // Cap at ~1.8MB to stay under Firestore doc limit (~1MB after overhead).
+                  if (uploadFailed && file.size <= 1800000) {
+                    try {
+                      const b64 = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(String(reader.result || ''));
+                        reader.onerror = () => reject(reader.error);
+                        reader.readAsDataURL(file);
+                      });
+                      fileData = b64; // data:image/png;base64,...
+                      uploadFailed = false; // rescued — admin CAN see it
+                      uploadSkipped = false;
+                      console.log('[collect] inline fallback OK, size=', b64.length);
+                    } catch (err: any) {
+                      console.error('[collect] inline fallback failed:', err?.message || err);
+                      uploadFailed = true;
+                    }
+                  } else if (uploadFailed && file.size > 1800000) {
+                    uploadFailed = true; // too big for inline, flag only
+                    uploadSkipped = true;
                   }
                 }
                 const submission = {
@@ -1780,23 +1803,31 @@ const App: React.FC = () => {
                   fileType: file?.type?.startsWith('image/') ? 'Image' : file?.type?.startsWith('video/') ? 'Reel' : 'Document',
                   fileName: file?.name || "No File",
                   fileUrl,
+                  fileData,
                   fileSize: file?.size || 0,
                   uploadFailed,
+                  uploadSkipped,
                   status: 'Pending' as const,
                   uid: auth.currentUser?.uid || 'guest',
                   createdAt: new Date().toISOString()
                 };
                 try {
                   await addDoc(collection(db, "submissions"), submission);
-                  const msg = uploadFailed && file
-                    ? "Submission received — but the file could not be uploaded. Try a smaller file or different format."
-                    : "Welcome to The Collective. Your vision has been transmitted to Tangible Union.";
+                  let msg = "Welcome to The Collective. Your vision has been transmitted to Tangible Union.";
+                  if (uploadFailed && uploadSkipped) {
+                    msg = "Submission received, but the file was too large to attach (>1.8MB). Storage upload is also unavailable — admin will see your message without the file.";
+                  } else if (uploadFailed) {
+                    msg = "Submission received — but the file could not be uploaded. Try a smaller file or different format.";
+                  } else if (fileData && !fileUrl) {
+                    msg = "Submission received. Storage was offline, so your file was attached inline — admin can view it from this listing.";
+                  }
                   showToast(msg, uploadFailed ? 'warn' : 'success');
                   setShowSubmissionModal(false);
                   setSubmissionFile(null);
+                  setIsSubmitting(false);
+                  submittingRef.current = false;
                 } catch (err: any) {
                   showToast(`Submission failed: ${err?.message || 'unknown error'}`, 'error');
-                } finally {
                   setIsSubmitting(false);
                   submittingRef.current = false;
                 }
