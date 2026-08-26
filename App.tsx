@@ -11,6 +11,9 @@ import { addDoc, collection } from 'firebase/firestore';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { web3Service } from './services/web3Service';
 import { InboxPanel } from './components/InboxPanel';
+import toyVerseLogo from './src/assets/logos/toy-verse.png';
+import vibeXLogo from './src/assets/logos/vibe-x.png';
+import savvyPriceLogo from './src/assets/logos/savvy-price.png';
 import { UserPaymentsPanel } from './components/UserPaymentsPanel';
 import { AvatarPicker } from './components/AvatarPicker';
 import { UserProfile, Product, Program, UserRole, ChatMessage, ServiceOffering, CartItem, FundSource, SubscriptionTier, TalentSubmission, FeaturedMember, Transaction, Agreement, PayoutAccount, StudioSettings, CryptoOption, DigitalWallet } from './types';
@@ -629,7 +632,7 @@ const App: React.FC = () => {
                   <a href="https://toyverse-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
-                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: 'url(/logos/toy-verse.png)' }} role="img" aria-label="Toyverse" />
+                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: `url(${toyVerseLogo})` }} role="img" aria-label="Toyverse" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Toy Verse HQ</h3>
@@ -650,7 +653,7 @@ const App: React.FC = () => {
                   <a href="https://vibe-x-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
-                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: 'url(/logos/vibe-x.png)' }} role="img" aria-label="Vibe X" />
+                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: `url(${vibeXLogo})` }} role="img" aria-label="Vibe X" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Vibe X</h3>
@@ -672,7 +675,7 @@ const App: React.FC = () => {
                     <div className="aspect-square bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
                       <div className="relative z-10 text-center">
-                        <img src="/logos/savvy-price.png" alt="Savvy Price" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto" style={{ mixBlendMode: 'normal' }} />
+                        <img src={savvyPriceLogo} alt="Savvy Price" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto" />
                         <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
                           <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
                           <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
