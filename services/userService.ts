@@ -64,6 +64,8 @@ export const userService = {
   // --- AUTH HUB ---
   async loginWithEmail(email: string, pass: string): Promise<UserProfile | null> {
     try {
+      // Force sign-out any existing session first so switching accounts works
+      if (auth.currentUser) await signOut(auth);
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       return this.getUserProfile(userCredential.user.uid);
     } catch (e: any) {
@@ -73,6 +75,8 @@ export const userService = {
 
   async signupWithEmail(email: string, pass: string, name: string): Promise<UserProfile | null> {
     try {
+      // Force sign-out any existing session first
+      if (auth.currentUser) await signOut(auth);
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const initialProfile: UserProfile = {
         name,
@@ -96,6 +100,8 @@ export const userService = {
 
   async loginWithGoogle(): Promise<UserProfile | null> {
     try {
+      // Force sign-out any existing session first so switching accounts works
+      if (auth.currentUser) await signOut(auth);
       const userCredential = await signInWithPopup(auth, googleProvider);
       const profile = await this.getUserProfile(userCredential.user.uid);
       if (!profile) {

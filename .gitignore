@@ -31,3 +31,7 @@ firebase-service-account.json
 *-firebase-adminsdk-*.json
 service-account*.json
 .firebaserc
+
+# Firebase local cache (auto-regenerated)
+.firebase/*.cache
+.firebase/*/cache

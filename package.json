@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "prebuild": "python3 /Users/333e/.fleet-mesh/cto/security/pre_deploy_gate.py",
-    "security:scan": "python3 /Users/333e/.fleet-mesh/cto/security/deep_scan.py"
+    "security:scan": "python3 /Users/333e/.fleet-mesh/cto/security/deep_scan.py",
+    "postdeploy": "python3 /Users/333e/.fleet-mesh/cto/security/post_deploy_verify.py .",
+    "deploy": "npm run build && firebase deploy --only hosting --project tu-studio-app && npm run postdeploy"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -18,7 +20,8 @@
     "firebase": "^12.10.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

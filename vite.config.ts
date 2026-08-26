@@ -19,8 +19,22 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
       },
       resolve: {
+        preserveSymlinks: true,
         alias: {
           '@': path.resolve(__dirname, './'),
+          'admin-suite': path.resolve(__dirname, 'admin-suite'),
+          'empire-ops': path.resolve(__dirname, 'empire-ops'),
+        }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: (id) => {
+              if (id.includes('recharts')) return 'recharts';
+              if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+              return undefined;
+            }
+          }
         }
       }
     };

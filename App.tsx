@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { STUDIO_APPS, PROGRAMS, PRODUCTS, SUBSCRIPTIONS, SERVICES, TEAM, TIMELINE, CORE_VALUES, FEATURED_MEMBERS } from './constants';
@@ -7,8 +7,20 @@ import { GeminiAssistant } from './services/geminiService';
 import { USERS_COLLECTION, userService } from './services/userService';
 import { stripeService } from './services/stripeService';
 import { auth } from './services/firebaseSetup';
+import { addDoc, collection } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { web3Service } from './services/web3Service';
+import { InboxPanel } from './components/InboxPanel';
+import { UserPaymentsPanel } from './components/UserPaymentsPanel';
+import { AvatarPicker } from './components/AvatarPicker';
 import { UserProfile, Product, Program, UserRole, ChatMessage, ServiceOffering, CartItem, FundSource, SubscriptionTier, TalentSubmission, FeaturedMember, Transaction, Agreement, PayoutAccount, StudioSettings, CryptoOption, DigitalWallet } from './types';
+// T.U Empire Admin Suite — shared package, 14+ sections, projects + business intelligence
+const EmpireAdmin = lazy(() => import('./admin-suite').then(m => ({ default: m.AdminDashboard })));
+// T.U Empire Ops — inventory editor + order manager + community moderation
+const EmpireOps = lazy(() => import('./empire-ops').then(m => ({ default: m.OpsConsole })));
+import { tuStudioConfig } from './admin.config';
+import { tuStudioOpsConfig } from './empire.config';
+import { db } from './services/firebaseSetup';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -48,6 +60,20 @@ const App: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [submissionFile, setSubmissionFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false); // sync guard against rapid double-clicks
+  const [toast, setToast] = useState<{msg: string; kind: 'success'|'warn'|'error'}|null>(null);
+
+  // Auto-dismiss toast after 5s
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const showToast = (msg: string, kind: 'success'|'warn'|'error' = 'success') => {
+    setToast({ msg, kind });
+  };
   
   // Membership Dynamic State
   const [fanAmount, setFanAmount] = useState(5.00);
@@ -89,7 +115,7 @@ const App: React.FC = () => {
   ]);
   
   // Admin UI State
-  const [adminView, setAdminView] = useState<'dashboard' | 'treasury' | 'legal' | 'programs' | 'shop' | 'web3'>('dashboard');
+  const [adminView, setAdminView] = useState<'dashboard' | 'treasury' | 'legal' | 'programs' | 'shop' | 'web3' | 'empire' | 'ops'>('dashboard');
   const [studioSettings, setStudioSettings] = useState<StudioSettings>({
     acceptedCryptos: [
       { id: 'eth', name: 'Ethereum', symbol: 'ETH', network: 'Ethereum Mainnet', enabled: true },
@@ -170,7 +196,7 @@ const App: React.FC = () => {
            setUserProfile(profile);
            setIsLoggedIn(true);
            setShowLoginModal(false);
-           if (profile.role === 'Admin') setActiveTab('admin');
+           if (profile.email === '3dma369@proton.me') setActiveTab('admin');
         }
       } else {
         const profile = await userService.signupWithEmail(loginEmail, loginPass, signupName);
@@ -181,7 +207,7 @@ const App: React.FC = () => {
         }
       }
     } catch (err: any) {
-      alert(`Authentication Error: ${err.message}`);
+      showToast(`Authentication Error: ${err.message}`, 'error');
     }
   };
 
@@ -192,9 +218,15 @@ const App: React.FC = () => {
         setUserProfile(profile);
         setIsLoggedIn(true);
         setShowLoginModal(false);
+        if (profile.email === '3dma369@proton.me') setActiveTab('admin');
       }
     } catch (err: any) {
-      alert(`Google Login Error: ${err.message}`);
+      const code = err?.code || '';
+      if (code.includes('access-blocked') || err?.message?.includes('Access blocked') || err?.message?.includes('invalid_request')) {
+        showToast('Google sign-in is restricted for this domain. Use Email + Sign Up tab to create an account.', 'error');
+      } else {
+        showToast(`Google Login Error: ${err.message}`, 'error');
+      }
     }
   };
 
@@ -203,6 +235,8 @@ const App: React.FC = () => {
     setIsLoggedIn(false);
     setUserProfile(null);
     setActiveTab('home');
+    setCartItems([]);
+    setIsCartOpen(false);
   };
 
   const changeTab = (tab: string) => {
@@ -286,7 +320,7 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       setCryptoStatus('error');
-      alert(`Asset Transfer Failed: ${err.message}`);
+      showToast(`Asset Transfer Failed: ${err.message}`, 'error');
     }
   };
 
@@ -327,11 +361,34 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark selection:bg-primary selection:text-white transition-all duration-500 font-display">
-      <Navbar 
-        activeTab={activeTab} 
-        setActiveTab={changeTab} 
+      {toast && (
+        <div
+          role="alert"
+          className={`fixed top-6 right-6 z-[9999] max-w-md px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-3 animate-fadeIn cursor-pointer ${
+            toast.kind === 'success'
+              ? 'bg-secondary text-black'
+              : toast.kind === 'warn'
+              ? 'bg-yellow-400 text-black'
+              : 'bg-red-500 text-white'
+          }`}
+          onClick={() => setToast(null)}
+        >
+          <span className="material-symbols-outlined text-xl">
+            {toast.kind === 'success' ? 'check_circle' : toast.kind === 'warn' ? 'warning' : 'error'}
+          </span>
+          <span className="flex-1">{toast.msg}</span>
+          <span className="material-symbols-outlined text-base opacity-70">close</span>
+        </div>
+      )}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={changeTab}
         isLoggedIn={isLoggedIn}
         userRole={userProfile?.role}
+        currentUserEmail={userProfile?.email}
+        currentUserPhoto={userProfile?.photoURL}
+        currentUserEmoji={userProfile?.avatarEmoji}
+        currentUserName={userProfile?.name}
         onLogout={handleLogout}
         onOpenLogin={() => { setAuthMode('login'); setShowLoginModal(true); }}
         cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
@@ -676,6 +733,7 @@ const App: React.FC = () => {
                     }} className="p-10 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 group transition-all hover:shadow-2xl cursor-pointer">
                       <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6 group-hover:scale-110 transition-transform"><span className="material-symbols-outlined text-3xl">{val.icon}</span></div>
                       <h3 className="text-xl font-black mb-2 uppercase tracking-tight">{val.title}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed mb-4">{val.description}</p>
                       <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-4">Discover More</p>
                    </div>
                  ))}
@@ -1116,7 +1174,27 @@ const App: React.FC = () => {
                     <button onClick={() => setContactMode('project')} className={`flex-1 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all ${contactMode === 'project' ? 'bg-white dark:bg-gray-800 text-primary shadow-xl' : 'text-gray-400'}`}>Project Proposal</button>
                  </div>
 
-                 <form className="space-y-8" onSubmit={e => { e.preventDefault(); alert("Vision Transmitted Successfully."); }}>
+                 <form className="space-y-8" onSubmit={async (e) => {
+                   e.preventDefault();
+                   const form = e.currentTarget as HTMLFormElement;
+                   const inputs = form.querySelectorAll('input, select, textarea');
+                   const data = {
+                     name: (inputs[0] as HTMLInputElement).value,
+                     email: (inputs[1] as HTMLInputElement).value,
+                     mode: contactMode,
+                     message: (inputs[inputs.length - 1] as HTMLTextAreaElement).value,
+                     uid: auth.currentUser?.uid || 'guest',
+                     createdAt: new Date().toISOString(),
+                     status: 'New'
+                   };
+                   try {
+                     await addDoc(collection(db, "contactMessages"), data);
+                     showToast("Vision Transmitted Successfully to Molina Studio Executives.", 'success');
+                     form.reset();
+                   } catch (err: any) {
+                     showToast(`Submission failed: ${err?.message || 'unknown error'}`, 'error');
+                   }
+                 }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <input className="w-full bg-gray-50 dark:bg-black border-none rounded-2xl p-6 text-sm font-bold shadow-inner" placeholder="Identity Name" required />
                        <input className="w-full bg-gray-50 dark:bg-black border-none rounded-2xl p-6 text-sm font-bold shadow-inner" placeholder="Communication Email" type="email" required />
@@ -1141,42 +1219,32 @@ const App: React.FC = () => {
                     )}
 
                     <textarea className="w-full bg-gray-50 dark:bg-black border-none rounded-[2.5rem] p-8 h-48 text-sm font-bold shadow-inner resize-none" placeholder={contactMode === 'project' ? "Project Scope / Goals / Vision..." : "Your Message..."} required />
-                    <button type="submit" onClick={async (e) => {
-                      e.preventDefault();
-                      if (!isLoggedIn) { setAuthMode('login'); setShowLoginModal(true); return; }
-                      const form = (e.target as any).form;
-                      const data = {
-                        name: form[0].value,
-                        email: form[1].value,
-                        mode: contactMode,
-                        message: form[form.length - 2].value,
-                        budget: contactMode === 'project' ? form[3].value : null
-                      };
-                      await userService.submitProjectRequest(auth.currentUser?.uid || "guest", data);
-                      alert("Vision Transmitted Successfully to Molina Studio Executives.");
-                    }} className="w-full py-8 bg-primary text-white rounded-[2.5rem] font-black uppercase text-xs tracking-[0.3em] shadow-2xl active:scale-95 transition-all">Transmit Vision</button>
+                    <button type="submit" className="w-full py-8 bg-primary text-white rounded-[2.5rem] font-black uppercase text-xs tracking-[0.3em] shadow-2xl active:scale-95 transition-all">Transmit Vision</button>
                  </form>
               </div>
             </div>
           </section>
         )}
 
-        {/* PROFILE PAGE */}
+        {/* PROFILE PAGE — any logged-in user */}
         {activeTab === 'profile' && isLoggedIn && userProfile && (
           <section className="max-w-7xl mx-auto px-4 py-24 animate-fadeIn">
             <div className="grid lg:grid-cols-4 gap-12">
                <div className="lg:col-span-1 space-y-8">
                   <div className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-2xl text-center">
                      <div className="relative inline-block mb-8">
-                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" className="w-24 h-24 rounded-full border-4 border-primary p-1 mx-auto" alt="Profile" />
+                        <AvatarPicker db={db} userId={userProfile.id || auth.currentUser?.uid} currentPhoto={userProfile.photoURL} currentEmoji={userProfile.avatarEmoji} userName={userProfile.name} />
                         <div className="absolute -bottom-2 -right-2 bg-secondary text-white w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-lg"><span className="material-symbols-outlined text-sm">verified</span></div>
                      </div>
                      <h2 className="text-3xl font-black uppercase tracking-tighter mb-1">{userProfile.name}</h2>
                      <p className="text-[10px] font-black uppercase text-primary tracking-[0.3em] mb-10">{userProfile.role}</p>
                      <div className="space-y-3">
-                        {['identity', 'financials', 'agreements', 'benefits', 'orders'].map(tab => (
+                        {(userProfile.email === '3dma369@proton.me'
+                          ? ['identity', 'financials', 'agreements', 'benefits', 'orders', 'inbox']
+                          : ['profile', 'payments', 'benefits', 'orders']
+                        ).map(tab => (
                           <button key={tab} onClick={() => setProfileSubTab(tab as any)} className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-left px-8 transition-all flex items-center gap-3 ${profileSubTab === tab ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
-                             <span className="material-symbols-outlined text-sm">{tab === 'identity' ? 'person' : tab === 'financials' ? 'account_balance_wallet' : tab === 'agreements' ? 'history_edu' : tab === 'benefits' ? 'stars' : 'receipt_long'}</span>
+                             <span className="material-symbols-outlined text-sm">{tab === 'identity' || tab === 'profile' ? 'person' : tab === 'financials' || tab === 'payments' ? 'account_balance_wallet' : tab === 'agreements' ? 'history_edu' : tab === 'benefits' ? 'stars' : tab === 'inbox' ? 'inbox' : 'receipt_long'}</span>
                              {tab}
                           </button>
                         ))}
@@ -1186,6 +1254,25 @@ const App: React.FC = () => {
                </div>
                <div className="lg:col-span-3 space-y-8">
                   <div className="bg-white dark:bg-gray-900 p-12 rounded-[4rem] border border-gray-100 dark:border-gray-800 shadow-2xl">
+                    {profileSubTab === 'profile' && <div className="animate-fadeIn">
+                      <h3 className="text-3xl font-black uppercase tracking-tighter mb-12">My Profile</h3>
+                      <div className="grid md:grid-cols-2 gap-10">
+                         <div className="space-y-2"><p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Legal Name</p><input className="w-full bg-gray-50 dark:bg-black p-6 rounded-[1.5rem] border-none font-bold shadow-inner" defaultValue={userProfile.name} /></div>
+                         <div className="space-y-2"><p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Direct Email</p><input className="w-full bg-gray-50 dark:bg-black p-6 rounded-[1.5rem] border-none font-bold shadow-inner" defaultValue={userProfile.email} /></div>
+                         <div className="md:col-span-2 space-y-2"><p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Artist Biography</p><textarea className="w-full bg-gray-50 dark:bg-black p-8 rounded-[2rem] border-none font-bold shadow-inner h-40 resize-none" defaultValue={userProfile.bio} /></div>
+                      </div>
+                      <div className="mt-16 pt-16 border-t border-gray-100 dark:border-gray-800">
+                         <h4 className="text-xl font-black uppercase mb-8">Shipping Nexus</h4>
+                         <div className="grid md:grid-cols-2 gap-4">
+                            <input className="md:col-span-2 w-full bg-gray-50 dark:bg-black p-6 rounded-[1.5rem] border-none font-bold shadow-inner" placeholder="Street Address" defaultValue={userProfile.shippingAddress?.street} />
+                            <input className="w-full bg-gray-50 dark:bg-black p-6 rounded-[1.5rem] border-none font-bold shadow-inner" placeholder="City" defaultValue={userProfile.shippingAddress?.city} />
+                            <input className="w-full bg-gray-50 dark:bg-black p-6 rounded-[1.5rem] border-none font-bold shadow-inner" placeholder="Zip Code" defaultValue={userProfile.shippingAddress?.zip} />
+                         </div>
+                      </div>
+                      <div className="mt-16 pt-16 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                         <button className="px-10 py-5 bg-primary text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Save Changes</button>
+                      </div>
+                    </div>}
                     {profileSubTab === 'identity' && <div className="animate-fadeIn">
                       <h3 className="text-3xl font-black uppercase tracking-tighter mb-12">Studio Identity</h3>
                       <div className="grid md:grid-cols-2 gap-10">
@@ -1202,6 +1289,8 @@ const App: React.FC = () => {
                          </div>
                       </div>
                     </div>}
+                    {profileSubTab === 'payments' && <UserPaymentsPanel db={db} userId={userProfile.id} userEmail={userProfile.email} />}
+                    {profileSubTab === 'orders' && <UserPaymentsPanel db={db} userId={userProfile.id} userEmail={userProfile.email} />}
                     {profileSubTab === 'financials' && <div className="animate-fadeIn space-y-12">
                       <h3 className="text-3xl font-black uppercase tracking-tighter mb-12">Financial Hub</h3>
                       {userProfile.role === 'Associate' && (
@@ -1268,24 +1357,74 @@ const App: React.FC = () => {
                               <h4 className="text-4xl font-black uppercase mb-6 tracking-tighter">Direct Executive Line</h4>
                               <p className="text-gray-400 text-sm font-medium italic leading-relaxed mb-10">As a {userProfile.activeSubscription} member, you have direct priority in the Studio multiverse.</p>
                               <button onClick={() => changeTab('contact')} className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-primary hover:text-white transition-all">Submit Executive Inquiry</button>
-                           </div>
-                        </div>}
-                  </div>
+                              </div>
+                              </div>}
+                              {profileSubTab === 'inbox' && <InboxPanel db={db} userId={userProfile.id} />}
+                              </div>
                </div>
             </div>
           </section>
         )}
 
-        {activeTab === 'admin' && isLoggedIn && userProfile?.role === 'Admin' && (
+        {activeTab === 'admin' && isLoggedIn && userProfile?.email === '3dma369@proton.me' && (
           <section className="max-w-7xl mx-auto px-4 py-24 animate-fadeIn">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8">
-               <div><h2 className="text-8xl font-black tracking-tighter uppercase mb-4 leading-none">Executive Suite</h2><p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em]">Molina Multimedia Governance</p></div>
+               <div><h2 className="text-8xl font-black tracking-tighter uppercase mb-4 leading-none">Executive Suite</h2><p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em]">T.U Studio Governance</p></div>
                <div className="flex bg-gray-100 dark:bg-black p-1.5 rounded-[2rem] shadow-inner flex-wrap gap-1">
-                  {['dashboard', 'treasury', 'legal', 'programs', 'shop', 'web3'].map(v => (
+                  {['dashboard', 'inbox', 'empire', 'ops', 'treasury', 'legal', 'programs', 'web3'].map(v => (
                     <button key={v} onClick={() => setAdminView(v as any)} className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${adminView === v ? 'bg-primary text-white shadow-xl' : 'text-gray-400 hover:text-gray-900'}`}>{v}</button>
                   ))}
                </div>
             </div>
+
+            {adminView === 'inbox' && (
+              <div className="bg-white dark:bg-gray-900 p-12 rounded-[4rem] border border-gray-100 dark:border-gray-800 shadow-2xl">
+                <InboxPanel db={db} userId={userProfile.id || auth.currentUser?.uid} />
+              </div>
+            )}
+
+            {adminView === 'empire' && (
+              <Suspense fallback={<div className="p-12 text-center">Loading Empire Admin…</div>}>
+                <EmpireAdmin config={tuStudioConfig} currentUser={userProfile ? { fullName: userProfile.fullName, email: userProfile.email, id: userProfile.id } : null} onLogout={() => { localStorage.removeItem('authToken'); window.location.href = '/'; }} />
+              </Suspense>
+            )}
+
+            {adminView === 'ops' && (
+              <Suspense fallback={<div className="p-12 text-center">Loading Empire Ops…</div>}>
+                <EmpireOps config={tuStudioOpsConfig} db={db} currentUser={userProfile ? { fullName: userProfile.fullName, email: userProfile.email, id: userProfile.id } : null} />
+              </Suspense>
+            )}
+
+            {adminView === 'programs' && (
+              <div className="space-y-12 animate-fadeIn">
+                 <h3 className="text-3xl font-black uppercase tracking-tighter mb-10">Program Management</h3>
+                 <div className="grid md:grid-cols-3 gap-8">
+                    {adminPrograms.length === 0 ? (
+                      <div className="md:col-span-3 p-12 text-center bg-gray-50 dark:bg-black rounded-3xl">
+                        <span className="material-symbols-outlined text-5xl text-gray-300 mb-4">subscriptions</span>
+                        <p className="text-gray-400 font-black uppercase text-[10px] tracking-widest">No programs yet. Create production programs, brand collaborations, or service offerings.</p>
+                      </div>
+                    ) : adminPrograms.map(p => (
+                      <div key={p.id} className="bg-white dark:bg-gray-900 p-8 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl">
+                        <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-2">{p.tier || 'Program'}</p>
+                        <h4 className="text-2xl font-black uppercase tracking-tight mb-4">{p.name}</h4>
+                        <p className="text-xs text-gray-500 italic mb-6 line-clamp-3">{p.description}</p>
+                        <div className="flex justify-between items-center pt-6 border-t border-gray-100 dark:border-gray-800">
+                          <span className="text-lg font-black">${p.price?.toLocaleString() || '0'}</span>
+                          <span className="text-[10px] font-black uppercase text-gray-400">{p.subscribers || 0} subscribers</span>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            )}
+
+            {adminView === 'shop' && (
+              <div className="space-y-12 animate-fadeIn">
+                 <h3 className="text-3xl font-black uppercase tracking-tighter mb-10">Shop Management</h3>
+                 <p className="text-gray-400 font-black uppercase text-[10px] tracking-widest">Product catalog management coming soon. Use Empire Admin → Products section for the full catalog UI.</p>
+              </div>
+            )}
 
             {adminView === 'dashboard' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -1479,7 +1618,7 @@ const App: React.FC = () => {
       <footer className="border-t border-gray-100 dark:border-gray-800 py-24 bg-gray-50/50 dark:bg-black/50">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-16 text-center md:text-left">
            <div>
-              <span className="text-4xl font-black tracking-tighter cursor-pointer" onClick={() => changeTab('home')}>Molina<span className="text-primary uppercase text-[10px] ml-1">Studio</span></span>
+              <span className="text-4xl font-black tracking-tighter cursor-pointer" onClick={() => changeTab('home')}>T.U<span className="text-primary uppercase text-[10px] ml-1">Studio</span></span>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mt-3">Executive Multimedia Production • San Francisco</p>
            </div>
            <div className="flex gap-12 text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -1487,7 +1626,7 @@ const App: React.FC = () => {
               <a href="#" className="hover:text-primary transition-colors">Usage Terms</a>
               <a href="#" className="hover:text-primary transition-colors">Studio News</a>
            </div>
-           <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">© 2024 Molina Multimedia Studio • Eric A. Molina Denegri</p>
+           <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">© 2024 T.U Multimedia Studio • Eric A. Molina Denegri</p>
         </div>
       </footer>
 
@@ -1549,41 +1688,156 @@ const App: React.FC = () => {
       {showSubmissionModal && (
         <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setShowSubmissionModal(false)} />
-          <div className="relative bg-white dark:bg-gray-950 text-gray-900 dark:text-white rounded-[4rem] shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[90vh] animate-scaleIn p-14 border border-white/5">
-              <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 leading-none">Creative Union</h2>
-              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.4em] mb-12">Submit your vision to the Molina Associate Network</p>
-              <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); alert("Talent Application Transmitted."); setShowSubmissionModal(false); }}>
+          <div className="relative bg-white dark:bg-gray-950 text-gray-900 dark:text-white rounded-[4rem] shadow-2xl w-full max-w-4xl overflow-y-auto max-h-[90vh] animate-scaleIn p-14 border border-white/5">
+              <h2 className="text-6xl font-black uppercase tracking-tighter mb-4 leading-none">The Collective</h2>
+              <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.4em] mb-12">Submit your vision to Tangible Union</p>
+
+              <div className="space-y-8 text-left text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-10 max-h-[40vh] overflow-y-auto pr-4">
+                <div>
+                  <h3 className="text-2xl font-black uppercase text-gray-900 dark:text-white mb-3">Tangible Union — Build. Create. Collaborate. Earn.</h3>
+                  <p className="italic text-gray-500 dark:text-gray-400 mb-4">A new creative community for San Francisco's next generation of creators, artists, makers, and digital entrepreneurs.</p>
+                  <p>You have the ideas. You have the skills. Now let's build the team around them.</p>
+                  <p className="mt-2">Many talented creators have everything they need to make something great — except the space, equipment, crew, production resources, or network to make it happen. Tangible Union is building that infrastructure.</p>
+                  <p className="mt-2">We are creating a co-op-style creative ecosystem where people can meet collaborators, form production teams, share resources, develop projects, teach their skills, and create content with the potential to generate real economic opportunities.</p>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-black uppercase text-gray-900 dark:text-white mb-3">Who Are We Looking For?</h4>
+                  <ul className="space-y-2 text-xs">
+                    <li>🎬 <strong>Video & Audio Production</strong> — Directors • Cinematographers • Camera Operators • Editors • Sound Engineers • Producers • Production Crew</li>
+                    <li>📡 <strong>Digital Creators & Streamers</strong> — YouTubers • Streamers • Podcasters • Livestreamers • Broadcasters • Content Creators</li>
+                    <li>🎨 <strong>Visual & Fine Arts</strong> — Graphic Designers • Illustrators • Motion Artists • Animators • Photographers • Visual Storytellers</li>
+                    <li>✍️ <strong>Writers & Journalists</strong> — Scriptwriters • Journalists • Researchers • Storytellers • Narrative Strategists • Content Writers</li>
+                    <li>🛠 <strong>Makers & Tech Innovators</strong> — Makers • Hackers • Technologists • Prop Designers • Fabricators • Digital Asset Creators</li>
+                    <li>🧑‍🏫 <strong>Educators & Community Builders</strong> — Teachers • Workshop Leaders • Mentors • Community Organizers • Creative Directors • Industry Professionals</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-black uppercase text-gray-900 dark:text-white mb-3">Don't Create Alone.</h4>
+                  <p className="italic">A filmmaker finds a writer. A streamer finds a crew. A journalist finds a designer. A producer finds an editor. A maker finds a media team. A creator finds a community.</p>
+                  <p className="mt-2">Together, we can turn individual skills into creative projects, productions, audiences, and businesses.</p>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-black uppercase text-gray-900 dark:text-white mb-3">What We're Building</h4>
+                  <ul className="space-y-1 text-xs">
+                    <li><strong>SPACE</strong> — A place to meet, plan, create, and produce.</li>
+                    <li><strong>EQUIPMENT</strong> — Shared production resources to help turn ideas into reality.</li>
+                    <li><strong>CREWS</strong> — Connect with people who have complementary skills.</li>
+                    <li><strong>COLLABORATION</strong> — Build projects across disciplines instead of working alone.</li>
+                    <li><strong>KNOWLEDGE</strong> — Teach what you know. Learn from others.</li>
+                    <li><strong>PRODUCTION</strong> — Develop and produce content on a regular basis.</li>
+                    <li><strong>ECONOMIC OPPORTUNITY</strong> — Explore ways to turn creative skills and digital content into sustainable income.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-black uppercase text-gray-900 dark:text-white mb-3">This Is Not Just An Internship.</h4>
+                  <p>It's an invitation to build something together. We are looking for people who want to create, not just people looking for a short-term position.</p>
+                  <p className="mt-2">Whether you're an experienced creator, a student with an idea, a recent graduate, an artist looking for collaborators, or someone who wants to learn by doing — <strong>there's a place for you in The Collective.</strong></p>
+                </div>
+
+                <div className="text-center pt-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Create • Collaborate • Learn • Produce • Grow</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mt-3">Tangible Union — San Francisco, CA</p>
+                </div>
+              </div>
+
+              <form className="space-y-6" onSubmit={async (e) => {
+                e.preventDefault();
+                // sync double-submit guard (state update can race with rapid clicks)
+                if (submittingRef.current || isSubmitting) return;
+                submittingRef.current = true;
+                setIsSubmitting(true);
+                const form = e.currentTarget as HTMLFormElement;
+                const file = submissionFile;
+                let fileUrl = '';
+                let uploadFailed = false;
+                if (file) {
+                  try {
+                    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const path = `submissions/${Date.now()}_${safeName}`;
+                    const r = storageRef(getStorage(), path);
+                    // Hard 8s timeout on upload so the form never hangs forever.
+                    await Promise.race([
+                      uploadBytes(r, file).then(async () => {
+                        fileUrl = await getDownloadURL(r);
+                      }),
+                      new Promise((_, rej) => setTimeout(() => rej(new Error('Upload timed out (8s)')), 8000))
+                    ]);
+                  } catch (err: any) {
+                    uploadFailed = true;
+                    console.error('[collect] file upload failed:', err?.message || err);
+                  }
+                }
+                const submission = {
+                  name: (form[0] as HTMLInputElement).value,
+                  email: (form[1] as HTMLInputElement).value,
+                  contact: (form[1] as HTMLInputElement).value,
+                  discipline: (form[2] as HTMLSelectElement).value,
+                  bio: (form[3] as HTMLTextAreaElement).value,
+                  fileType: file?.type?.startsWith('image/') ? 'Image' : file?.type?.startsWith('video/') ? 'Reel' : 'Document',
+                  fileName: file?.name || "No File",
+                  fileUrl,
+                  fileSize: file?.size || 0,
+                  uploadFailed,
+                  status: 'Pending' as const,
+                  uid: auth.currentUser?.uid || 'guest',
+                  createdAt: new Date().toISOString()
+                };
+                try {
+                  await addDoc(collection(db, "submissions"), submission);
+                  const msg = uploadFailed && file
+                    ? "Submission received — but the file could not be uploaded. Try a smaller file or different format."
+                    : "Welcome to The Collective. Your vision has been transmitted to Tangible Union.";
+                  showToast(msg, uploadFailed ? 'warn' : 'success');
+                  setShowSubmissionModal(false);
+                  setSubmissionFile(null);
+                } catch (err: any) {
+                  showToast(`Submission failed: ${err?.message || 'unknown error'}`, 'error');
+                } finally {
+                  setIsSubmitting(false);
+                  submittingRef.current = false;
+                }
+              }}>
                 <div className="grid grid-cols-2 gap-6">
                   <input className="w-full bg-gray-50 dark:bg-black border-none rounded-2xl p-6 text-sm font-bold shadow-inner" placeholder="Legal Name" required />
                   <input className="w-full bg-gray-50 dark:bg-black border-none rounded-2xl p-6 text-sm font-bold shadow-inner" placeholder="Direct Email" type="email" required />
                 </div>
-                <textarea className="w-full bg-gray-50 dark:bg-black border-none rounded-[2.5rem] p-8 h-44 text-sm font-bold shadow-inner resize-none" placeholder="Describe your creative specialty and philosophy..." required />
-                <div className="p-12 border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem] text-center group cursor-pointer hover:border-primary transition-all">
+                <select required className="w-full bg-gray-50 dark:bg-black border-none rounded-2xl p-6 text-sm font-bold shadow-inner">
+                  <option value="">Select your discipline</option>
+                  <option>🎬 Video & Audio Production</option>
+                  <option>📡 Digital Creators & Streamers</option>
+                  <option>🎨 Visual & Fine Arts</option>
+                  <option>✍️ Writers & Journalists</option>
+                  <option>🛠 Makers & Tech Innovators</option>
+                  <option>🧑‍🏫 Educators & Community Builders</option>
+                </select>
+                <textarea className="w-full bg-gray-50 dark:bg-black border-none rounded-[2.5rem] p-8 h-32 text-sm font-bold shadow-inner resize-none" placeholder="Describe your creative specialty, philosophy, and what you want to build in The Collective..." required />
+                <div className="p-10 border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem] text-center group cursor-pointer hover:border-primary transition-all">
                    <input type="file" onChange={e => setSubmissionFile(e.target.files?.[0] || null)} className="hidden" id="file-upload" />
                    <label htmlFor="file-upload" className="cursor-pointer block">
-                      <span className="material-symbols-outlined text-6xl text-gray-200 group-hover:text-primary transition-colors mb-4 block">cloud_upload</span>
+                      <span className="material-symbols-outlined text-5xl text-gray-200 group-hover:text-primary transition-colors mb-3 block">cloud_upload</span>
                       <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{submissionFile ? submissionFile.name : "Attach Reel / Portfolio Assets"}</span>
                    </label>
                 </div>
-                <div className="flex gap-6 pt-6">
-                   <button type="button" onClick={() => setShowSubmissionModal(false)} className="flex-1 py-6 bg-gray-50 dark:bg-gray-800 text-gray-400 rounded-3xl font-black uppercase text-[10px] tracking-widest">Abandon</button>
-                   <button type="submit" onClick={async (e) => {
-                      e.preventDefault();
-                      if (!isLoggedIn) { setAuthMode('login'); setShowLoginModal(true); return; }
-                      const form = (e.target as any).form;
-                      const submission = {
-                        name: form[0].value,
-                        email: form[1].value,
-                        contact: form[1].value, // Fallback to email as contact
-                        bio: form[2].value,
-                        fileType: 'Video' as const,
-                        fileName: submissionFile?.name || "No File",
-                        status: 'Pending' as const
-                      };
-                      await userService.submitTalent(auth.currentUser?.uid || "", submission);
-                      alert("Talent Application Transmitted to Associated Collective.");
-                      setShowSubmissionModal(false);
-                   }} className="flex-[2] py-6 bg-primary text-white rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20">Transmit Vision</button>
+                <div className="flex gap-6 pt-4">
+                   <button type="button" onClick={() => setShowSubmissionModal(false)} className="flex-1 py-6 bg-gray-50 dark:bg-gray-800 text-gray-400 rounded-3xl font-black uppercase text-[10px] tracking-widest">Close</button>
+                   <button type="button" disabled={isSubmitting} onClick={(ev) => {
+                  ev.preventDefault();
+                  const form = ev.currentTarget.closest('form');
+                  if (!form) return;
+                  // Trigger the form's submit handler explicitly
+                  const propsKey = Object.keys(form).find(k => k.startsWith('__reactProps'));
+                  if (propsKey && form[propsKey].onSubmit) {
+                    form[propsKey].onSubmit({ preventDefault: () => {}, currentTarget: form });
+                  } else {
+                    form.requestSubmit();
+                  }
+                }} className="flex-[2] py-6 bg-primary text-white rounded-3xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                   {isSubmitting ? 'Transmitting...' : 'Join The Collective'}
+                  </button>
                 </div>
               </form>
           </div>

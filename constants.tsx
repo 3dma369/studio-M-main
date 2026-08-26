@@ -172,9 +172,9 @@ export const TIMELINE: TimelineEvent[] = [
 ];
 
 export const CORE_VALUES = [
-  { title: 'Collaboration', icon: 'groups' },
-  { title: 'Creativity', icon: 'lightbulb' },
-  { title: 'Member Excellence', icon: 'stars' }
+  { title: 'Collaboration', icon: 'groups', description: 'Join the T.U Studio Collective. Submit your creative vision, share your reel, and partner with our production team on the next generation of multimedia projects.' },
+  { title: 'Creativity', icon: 'lightbulb', description: 'Explore our latest studio output — Toy Verses, Try Bay Area, and original productions crafted with cutting-edge tools and bold artistic direction.' },
+  { title: 'Member Excellence', icon: 'stars', description: 'Honoring the monthly visionaries, partners, and fans whose contributions power the studio. Every tier shapes what we build next.' }
 ];
 
 export const FEATURED_MEMBERS: FeaturedMember[] = [

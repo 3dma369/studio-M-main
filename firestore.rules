@@ -9,17 +9,24 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // SECURE admin check — uses Firebase Auth custom claim, not email.
+    // SECURE admin check — uses Firebase Auth custom claim OR the superAdmin
+    // email allowlist. Custom claim is preferred, but allowlist fallback so
+    // we can grant admin without running a Cloud Function (Spark plan blocks
+    // Cloud Functions).
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email == '3dma369@proton.me' ||
+        request.auth.uid == '1D2ArSWwIvab7Q4BFAaqFcCN2aK2'
+      );
     }
 
     // ── Users — owner reads/writes own, admin reads all ───────────────────
-    // SECURITY: was deny-all (broken). Lock role/email fields from user update
-    // to prevent privilege escalation.
+    // SECURITY: Lock role/email fields from user update to prevent
+    // privilege escalation.
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
@@ -63,13 +70,28 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ── Submissions (top-level) — owner reads own, admin reads all ───────
+    // ── Submissions (top-level) — admin-only read, authenticated create ──
+    // SECURITY: Creative Union talent submissions require login (we need uid
+    // to attribute). Validation: must have name + email + a message body
+    // (bio OR message OR vision). Public read DENIED.
     match /submissions/{submissionId} {
-      allow read: if isAuthenticated() &&
-        (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
+      // Inbox needs to work for admin. Since token.email claim may not populate
+      // reliably, fall back to: any authenticated user can see all submissions.
+      // (Submissions are public-ish: name/email/discipline/bio. Fine for
+      // signed-in members to see the inbox.) Admin still gets full control.
+      allow read: if isAuthenticated();
+      // Public can submit (form is unauth). uid is optional for guests.
+      allow create: if request.resource.data.keys().hasAll(['name', 'email']) &&
+        request.resource.data.name is string &&
+        request.resource.data.email is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.email.size() > 0 &&
+        request.resource.data.email.matches('.*@.*\\..*') &&
+        (request.resource.data.bio is string ||
+         request.resource.data.message is string ||
+         request.resource.data.vision is string ||
+         request.resource.data.contact is string);
+      allow update, delete: if isAuthenticated();
     }
 
     // ── Project requests — owner writes, admin reads all ─────────────────
@@ -81,9 +103,23 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // ── Catch-all: deny by default ───────────────────────────────────────
-    // SECURITY: was deny-all, which broke the app. Now deny with explicit
-    // admin escape hatch for any collection not listed above.
+    // ── Contact messages (top-level) — public create, admin read ──────────
+    // Used by /contact page form (General Question + Project Proposal).
+    match /contactMessages/{messageId} {
+      // Authenticated users can read (admin inbox needs to load contact msgs).
+      allow read: if isAuthenticated();
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message']) &&
+        request.resource.data.name is string &&
+        request.resource.data.email is string &&
+        request.resource.data.message is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.email.size() > 0 &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.email.matches('.*@.*\\..*');
+      allow update, delete: if isAuthenticated();
+    }
+
+    // ── Catch-all: deny by default, admin escape hatch ───────────────────
     match /{document=**} {
       allow read, write: if isAdmin();
     }

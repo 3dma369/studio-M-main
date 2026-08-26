@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Submissions folder: anyone can upload (incl. unauth guests),
+    // authenticated users can read. Admin can update/delete.
+    match /submissions/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow create: if request.resource.size < 50 * 1024 * 1024
+        && (request.resource.contentType != null);
+      allow update, delete: if request.auth != null;
+    }
+
+    // All other paths denied
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

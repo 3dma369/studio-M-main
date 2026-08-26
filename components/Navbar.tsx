@@ -6,18 +6,26 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
   isLoggedIn: boolean;
   userRole?: UserRole;
+  currentUserEmail?: string;
+  currentUserPhoto?: string;
+  currentUserEmoji?: string;
+  currentUserName?: string;
   onLogout: () => void;
   onOpenLogin: () => void;
   cartCount: number;
   onOpenCart: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ 
-  activeTab, 
-  setActiveTab, 
-  isLoggedIn, 
-  userRole, 
-  onLogout, 
+export const Navbar: React.FC<NavbarProps> = ({
+  activeTab,
+  setActiveTab,
+  isLoggedIn,
+  userRole,
+  currentUserEmail,
+  currentUserPhoto,
+  currentUserEmoji,
+  currentUserName,
+  onLogout,
   onOpenLogin,
   cartCount,
   onOpenCart
@@ -135,17 +143,37 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* User buttons */}
               {isLoggedIn ? (
-                <div className="hidden md:flex items-center gap-4">
-                  <button 
-                    onClick={() => setActiveTab('profile')}
-                    className={`w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center hover:ring-2 hover:ring-primary transition-all overflow-hidden border-2 ${activeTab === 'profile' ? 'ring-2 ring-primary' : 'border-transparent'}`}
+                <div className="hidden md:flex items-center gap-2 lg:gap-3">
+                  {currentUserEmail === '3dma369@proton.me' && (
+                    <button
+                      onClick={() => setActiveTab('admin')}
+                      className={`px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'admin' ? 'bg-primary text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary'}`}
+                    >
+                      <span className="material-symbols-outlined text-sm mr-1 align-middle">admin_panel_settings</span>
+                      Admin
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setActiveTab(currentUserEmail === '3dma369@proton.me' ? 'admin' : 'profile')}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center hover:ring-2 hover:ring-primary transition-all overflow-hidden border-2 ${activeTab === 'profile' || activeTab === 'admin' ? 'ring-2 ring-primary' : 'border-transparent'}`}
+                    title={currentUserEmail === '3dma369@proton.me' ? 'Admin Dashboard' : 'My Profile'}
                   >
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" />
+                    {currentUserPhoto ? (
+                      <img src={currentUserPhoto} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : currentUserEmoji ? (
+                      <span className="text-2xl bg-gradient-to-br from-primary/20 to-secondary/20 w-full h-full flex items-center justify-center">{currentUserEmoji}</span>
+                    ) : (
+                      <span className="text-lg font-black bg-gradient-to-br from-primary/30 to-secondary/30 w-full h-full flex items-center justify-center text-primary">
+                        {(currentUserName || currentUserEmail || '?').charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </button>
-                  <button 
+                  <button
                     onClick={onLogout}
-                    className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+                    className="px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-colors whitespace-nowrap shadow-md"
+                    title="Log Out"
                   >
+                    <span className="material-symbols-outlined text-sm align-middle mr-1">logout</span>
                     Log Out
                   </button>
                 </div>
