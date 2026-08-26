@@ -657,7 +657,7 @@ const App: React.FC = () => {
                     <div className="aspect-square bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
                       <div className="relative z-10 text-center">
-                        <span className="text-6xl">🎵</span>
+                        <img src="/logos/vibe-x.png" alt="Vibe X" className="h-32 w-32 object-contain drop-shadow-2xl mx-auto" />
                         <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
                           <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
                           <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
