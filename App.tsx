@@ -672,8 +672,9 @@ const App: React.FC = () => {
 
                   {/* SAVVY PRICE */}
                   <a href="https://price-n-inventory.vercel.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
-                    <div className="aspect-square bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <div className="aspect-square bg-gradient-to-br from-slate-900 via-zinc-800 to-amber-900 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-50 group-hover:opacity-70 transition-opacity mix-blend-luminosity" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-transparent to-yellow-900/40" />
                       <div className="relative z-10 text-center">
                         <img src={savvyPriceLogo} alt="Savvy Price" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto" />
                         <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">

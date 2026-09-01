@@ -70,7 +70,7 @@ export const PROGRAMS: Program[] = [
     id: 'dating',
     title: 'DATE ME <3 I DATE YOU',
     description: 'A high-stakes dating show exploring the modern dilemma: love or a mystery prize?',
-    image: 'https://images.unsplash.com/photo-1511733331976-290371e8c0a9?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&q=80&w=1600',
     category: 'Reality',
     videoUrl: 'https://youtube.com/watch?v=sample1',
     platform: 'YouTube',
