@@ -1088,12 +1088,13 @@ const App: React.FC = () => {
                <div className="lg:col-span-2 space-y-8">
                   <h2 className="text-6xl font-black mb-8 uppercase tracking-tighter leading-none">Reality Hub</h2>
                   <div className="aspect-video bg-black rounded-[4rem] overflow-hidden shadow-2xl relative border border-gray-100 dark:border-gray-800">
-                     <iframe 
-                       className="w-full h-full" 
-                       src="https://www.youtube.com/embed/LO363deNNsA?autoplay=0&mute=0&controls=1&rel=0" 
-                       title="3volution_tv - Toy Verse HQ" 
-                       frameBorder="0" 
-                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                     <iframe
+                       className="w-full h-full"
+                       src="https://www.youtube-nocookie.com/embed/LO363deNNsA?autoplay=0&mute=0&controls=1&rel=0&modestbranding=1"
+                       title="3volution_tv - Toy Verse HQ"
+                       frameBorder="0"
+                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                       referrerPolicy="strict-origin-when-cross-origin"
                        allowFullScreen
                      />
                   </div>
