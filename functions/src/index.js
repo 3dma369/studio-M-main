@@ -1,18 +1,41 @@
 const functions = require('firebase-functions');
 
-// `secrets: [...]` as first arg tells Cloud Functions to inject the named
-// secrets as process.env.STRIPE_* at runtime. In firebase-functions@6.x v1
-// API, opts are passed directly to onRequest/onCall instead of runWith().
-const STRIPE_SECRETS=['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'];
+// Legacy functions.config() values (set via `firebase functions:config:set`)
+// act as a fallback when Secret Manager isn't available (no billing on project).
+// New deployments SHOULD prefer process.env.STRIPE_* via the secrets: [...] opt,
+// but that requires billing enabled on the project. Reading both lets us
+// deploy on the tu-studio-app project today and migrate later without a code change.
+const LEGACY = (() => {
+  try { return functions.config(); } catch (e) { return null; }
+})();
+
+const STRIPE_SECRETS = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'];
 const stripeOnCall = (handler) =>
   functions.https.onCall({ secrets: STRIPE_SECRETS }, handler);
 const stripeOnRequest = (handler) =>
   functions.https.onRequest({ secrets: STRIPE_SECRETS }, handler);
 
+const resolveSecret = (envName, legacyPath) => {
+  // 1. prefer process.env (Secret Manager when billing is enabled)
+  const fromEnv = process.env[envName];
+  if (fromEnv) return fromEnv;
+  // 2. fall back to legacy functions.config() so we work without billing
+  if (LEGACY && legacyPath) {
+    const parts = legacyPath.split('.');
+    let cur = LEGACY;
+    for (const p of parts) {
+      if (cur && typeof cur === 'object' && p in cur) cur = cur[p];
+      else { cur = null; break; }
+    }
+    if (cur) return cur;
+  }
+  return null;
+};
+
 let _stripe = null;
 const getStripe = () => {
   if (!_stripe) {
-    const key = process.env.STRIPE_SECRET_KEY;
+    const key = resolveSecret('STRIPE_SECRET_KEY', 'stripe.secret_key');
     if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
     _stripe = require('stripe')(key);
   }
@@ -162,7 +185,7 @@ exports.youtubeChannelFeed = functions.https.onCall(async (data, context) => {
 
 exports.stripeWebhook = stripeOnRequest(async (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = resolveSecret('STRIPE_WEBHOOK_SECRET', 'stripe.webhook_secret');
   if (!webhookSecret) {
     console.warn('[stripe-webhook] STRIPE_WEBHOOK_SECRET not configured');
     return res.status(200).send({ received: true, warning: 'webhook secret not configured' });
