@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Oasis SF — Welcome back to the wild</title>
+    <meta name="description" content="Urban Oasis SF — Premium park experiences in San Francisco. Discover events, explore parks, book rentals, and connect with the community." />
+    <meta name="keywords" content="San Francisco parks, urban oasis, SF events, park rentals, Dolores Park" />
+    <meta name="build-id" content="v1.1.13-promo-index-email-mkt" />
+    <meta name="theme-color" content="#065F46" />
+    <meta property="og:title" content="Urban Oasis SF — Premium Park Experiences" />
+    <meta property="og:description" content="Welcome back to the wild. Discover San Francisco's best parks, events, and community." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sf-park-urban.web.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Urban Oasis SF — Premium Park Experiences" />
+    <meta name="twitter:description" content="Welcome back to the wild." />
+    <link rel="canonical" href="https://sf-park-urban.web.app/" />
+    
+    <!-- Design Stack -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- v1.2.62-CACHE-BUST-CHUNKS-START --><script>
+(function(){
+  try {
+    var V = '1.1.38-fKnhDRjn';
+    var origFetch = window.fetch ? window.fetch.bind(window) : null;
+    if (origFetch && !window.__cacheBustInstalled) {
+      window.__cacheBustInstalled = V;
+      window.fetch = function(input, init) {
+        try {
+          var url = (typeof input === 'string') ? input : (input && input.url) || '';
+          if (url && url.indexOf('/assets/') === 0 && /\.js(\?|$)/.test(url) && url.indexOf('?v=' + V) === -1 && url.indexOf('&v=' + V) === -1) {
+            var sep = url.indexOf('?') === -1 ? '?' : '&';
+            var newUrl = url + sep + 'v=' + V;
+            if (typeof input === 'string') {
+              input = newUrl;
+            } else if (input && typeof input === 'object') {
+              try { input = new Request(newUrl, input); } catch(e) {}
+            }
+          }
+        } catch(e) { /* never break the app for a cache-bust patch */ }
+        return origFetch(input, init);
+      };
+    }
+  } catch(e) { console.error('[cache-bust]', e); }
+})();
+</script><!-- v1.2.62-CACHE-BUST-CHUNKS-END -->
+<script type="module" crossorigin src="/assets/index-fKnhDRjn.js?v=1.1.38-fKnhDRjn"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-A-dgsLtt.css?v=1.1.38-fKnhDRjn">
+</head>
+<body class="bg-slate-50 antialiased hide-scrollbar">
+    <div id="root"></div>
+    <!-- Cache buster injected at build time -->
+</body>
+</html>

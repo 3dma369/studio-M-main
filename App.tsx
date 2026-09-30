@@ -14,6 +14,7 @@ import { InboxPanel } from './components/InboxPanel';
 import toyVerseLogo from './src/assets/logos/toy-verse.png';
 import vibeXLogo from './src/assets/logos/vibe-x.png';
 import savvyPriceLogo from './src/assets/logos/savvy-price.png';
+import urbanOasisLogo from './src/assets/logos/urban-oasis.png';
 import { UserPaymentsPanel } from './components/UserPaymentsPanel';
 import { AvatarPicker } from './components/AvatarPicker';
 import { UserProfile, Product, Program, UserRole, ChatMessage, ServiceOffering, CartItem, FundSource, SubscriptionTier, TalentSubmission, FeaturedMember, Transaction, Agreement, PayoutAccount, StudioSettings, CryptoOption, DigitalWallet } from './types';
@@ -664,7 +665,7 @@ const App: React.FC = () => {
                   <p className="text-lg text-gray-400 italic font-medium">Content meets technology — our apps power the Molina Universe</p>
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                   {/* TOY VERSE HQ */}
                   <a href="https://toyverse-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center relative overflow-hidden">
@@ -730,6 +731,34 @@ const App: React.FC = () => {
                       </div>
                       <div className="mt-8 flex items-center gap-2 text-amber-600">
                         <span className="text-[10px] font-black uppercase tracking-widest">Explore Savvy Price</span>
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* URBAN OASIS */}
+                  <a href="https://urban-oasis-go.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
+                    <div className="aspect-square bg-gradient-to-br from-emerald-900 via-teal-800 to-emerald-700 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-teal-900/40" />
+                      <div className="relative z-10 text-center">
+                        <img src={urbanOasisLogo} alt="Urban Oasis" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto rounded-2xl" />
+                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                          <span className="material-symbols-outlined text-white text-sm">park</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-widest">SF Parks</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-10">
+                      <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Urban Oasis</h3>
+                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">SF park delivery, rentals, classes, and concierge. Order food, gear, and experiences straight to your picnic blanket.</p>
+                      <div className="flex flex-wrap gap-2">
+                        {['Parks', 'Rentals', 'Delivery', 'Classes'].map(tag => (
+                          <span key={tag} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-[9px] font-black uppercase rounded-full text-gray-400">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="mt-8 flex items-center gap-2 text-emerald-600">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Open Urban Oasis</span>
                         <span className="material-symbols-outlined text-sm group-hover:translate-x-2 transition-transform">arrow_forward</span>
                       </div>
                     </div>
