@@ -93,6 +93,73 @@ exports.stripeCreatePaymentIntent = stripeOnCall(async (data, context) => {
   return { clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id };
 });
 
+// ── YouTube channel feed (for Reality Hub) ─────────────────────────────────
+// Public RSS feed proxy so the browser can fetch it without CORS issues.
+// Channel uploads playlist format: UU + channel_id
+//   https://www.youtube.com/feeds/videos.xml?playlist_id=UUxxxxxxxxxxxxxxxxxxxxxx
+// Cached for 15 minutes to spare YouTube.
+const YOUTUBE_RSS_CACHE_TTL_MS = 15 * 60 * 1000;
+const _ytRssCache = new Map(); // key: playlistId -> { ts, videos }
+
+exports.youtubeChannelFeed = functions.https.onCall(async (data, context) => {
+  const { playlistId, maxResults = 15 } = data || {};
+  if (!playlistId || !/^UU[A-Za-z0-9_-]{22}$/.test(playlistId)) {
+    throw new functions.https.HttpsError('invalid-argument',
+      'playlistId must be the uploads playlist id (UU + 22-char channel id)');
+  }
+  const limit = Math.max(1, Math.min(50, Number(maxResults) || 15));
+
+  const cached = _ytRssCache.get(playlistId);
+  if (cached && Date.now() - cached.ts < YOUTUBE_RSS_CACHE_TTL_MS) {
+    return { videos: cached.videos.slice(0, limit), cached: true };
+  }
+
+  const url = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(playlistId)}`;
+  const xml = await new Promise((resolve, reject) => {
+    const lib = require('https');
+    const req = lib.get(url, { timeout: 8000 }, (res) => {
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(new Error(`YouTube RSS HTTP ${res.statusCode}`));
+      }
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => resolve(body));
+    });
+    req.on('timeout', () => { req.destroy(new Error('YouTube RSS timeout')); });
+    req.on('error', reject);
+  });
+
+  // Minimal XML parser — entries look like:
+  //   <entry>...<yt:videoId>ID</yt:videoId>...<published>DATE</published>...
+  //          ...<media:title>TITLE</media:title>...
+  //          ...<media:thumbnail url="https://i3.ytimg.com/vi/ID/hqdefault.jpg" .../>
+  const videos = [];
+  const entryRe = /<entry>([\s\S]*?)<\/entry>/g;
+  let m;
+  while ((m = entryRe.exec(xml)) !== null) {
+    const block = m[1];
+    const idMatch = block.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+    const titleMatch = block.match(/<media:title>([^<]+)<\/media:title>/);
+    const publishedMatch = block.match(/<published>([^<]+)<\/published>/);
+    const thumbMatch = block.match(/<media:thumbnail[^>]+url="([^"]+)"/);
+    if (!idMatch) continue;
+    videos.push({
+      videoId: idMatch[1],
+      title: titleMatch ? titleMatch[1] : 'Untitled',
+      publishedAt: publishedMatch ? publishedMatch[1] : null,
+      thumbnail: thumbMatch ? thumbMatch[1] : `https://i.ytimg.com/vi/${idMatch[1]}/hqdefault.jpg`,
+      url: `https://www.youtube.com/watch?v=${idMatch[1]}`,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${idMatch[1]}`,
+    });
+    if (videos.length >= 50) break;
+  }
+
+  _ytRssCache.set(playlistId, { ts: Date.now(), videos });
+  return { videos: videos.slice(0, limit), cached: false };
+});
+
 exports.stripeWebhook = stripeOnRequest(async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
