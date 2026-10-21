@@ -36,9 +36,8 @@ const App: React.FC = () => {
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // ── Reality Hub: YouTube channel feed ─────────────────────────────────
-  // 3volution_tv uploads playlist (UU + channelId)
-  const YT_UPLOADS_PLAYLIST_ID = 'UUAdN8wUfHqJJdLoAZUoZ4xQ';
+  // ── Reality Hub: YouTube channel feed (static JSON, no CORS, no function) ──
+  // Feed is pre-built at deploy time and served as /youtube-feed.json
   const [hubPlaylist, setHubPlaylist] = useState<{ videoId: string; title: string; publishedAt: string | null; thumbnail: string; url: string; embedUrl: string }[]>([]);
   const [hubCurrentIdx, setHubCurrentIdx] = useState(0);
   const [hubLoading, setHubLoading] = useState(false);
@@ -49,11 +48,14 @@ const App: React.FC = () => {
     if (hubPlaylist.length > 0) return; // already loaded
     setHubLoading(true);
     setHubError(null);
-    const fns = getFunctions();
-    const call = httpsCallable(fns, 'youtubeChannelFeed');
-    call({ playlistId: YT_UPLOADS_PLAYLIST_ID, maxResults: 15 })
-      .then((res: any) => {
-        const vids = (res?.data?.videos || []) as any[];
+
+    fetch('/youtube-feed.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        const vids = (data?.videos || []) as any[];
         setHubPlaylist(vids);
         setHubCurrentIdx(0);
         setHubLoading(false);
@@ -670,7 +672,7 @@ const App: React.FC = () => {
                   <a href="https://toyverse-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
-                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: `url(${toyVerseLogo})` }} role="img" aria-label="Toyverse" />
+                      <img src={toyVerseLogo} alt="Toyverse" className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Toy Verse HQ</h3>
@@ -691,7 +693,7 @@ const App: React.FC = () => {
                   <a href="https://vibe-x-app.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
-                      <div className="relative z-10 w-40 h-40 bg-no-repeat bg-contain bg-center" style={{ backgroundImage: `url(${vibeXLogo})` }} role="img" aria-label="Vibe X" />
+                      <img src={vibeXLogo} alt="Vibe X" className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Vibe X</h3>
@@ -713,13 +715,7 @@ const App: React.FC = () => {
                     <div className="aspect-square bg-gradient-to-br from-slate-900 via-zinc-800 to-amber-900 flex items-center justify-center relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-50 group-hover:opacity-70 transition-opacity mix-blend-luminosity" />
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-transparent to-yellow-900/40" />
-                      <div className="relative z-10 text-center">
-                        <img src={savvyPriceLogo} alt="Savvy Price" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto" />
-                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
-                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
-                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
-                        </div>
-                      </div>
+                      <img src={savvyPriceLogo} alt="Savvy Price" className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Savvy Price</h3>
@@ -739,15 +735,9 @@ const App: React.FC = () => {
                   {/* URBAN OASIS */}
                   <a href="https://urban-oasis-go.web.app/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className="aspect-square bg-gradient-to-br from-emerald-900 via-teal-800 to-emerald-700 flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" />
-                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-teal-900/40" />
-                      <div className="relative z-10 text-center">
-                        <img src={urbanOasisLogo} alt="Urban Oasis" className="h-40 w-40 object-contain drop-shadow-2xl mx-auto rounded-2xl" />
-                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
-                          <span className="material-symbols-outlined text-white text-sm">park</span>
-                          <span className="text-white text-[10px] font-black uppercase tracking-widest">SF Parks</span>
-                        </div>
-                      </div>
+                      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-transparent to-teal-900/40" />
+                      <img src={urbanOasisLogo} alt="Urban Oasis" className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Urban Oasis</h3>
@@ -907,18 +897,12 @@ const App: React.FC = () => {
                 <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white"><span className="material-symbols-outlined text-2xl">apps</span></div>
                 <h3 className="text-4xl font-black uppercase tracking-tighter">Apps</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {STUDIO_APPS.map(app => (
                   <a key={app.id} href={app.url} target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-gray-900 rounded-[3.5rem] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-2xl hover:shadow-3xl hover:-translate-y-3 transition-all block">
                     <div className={`aspect-square bg-gradient-to-br ${app.gradient} flex items-center justify-center relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity" style={{ backgroundImage: `url('${app.image}')` }} />
-                      <div className="relative z-10 text-center">
-                        <span className="text-6xl">{app.icon}</span>
-                        <div className="mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
-                          <span className="material-symbols-outlined text-white text-sm">open_in_new</span>
-                          <span className="text-white text-[10px] font-black uppercase tracking-widest">Live</span>
-                        </div>
-                      </div>
+                      <div className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:opacity-70 transition-opacity" style={{ backgroundImage: `url('${app.image}')` }} />
+                      <img src={app.logo} alt={app.title} className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl" />
                     </div>
                     <div className="p-10">
                       <h3 className="text-2xl font-black uppercase tracking-tight mb-3">{app.title}</h3>
@@ -1279,16 +1263,23 @@ const App: React.FC = () => {
                              <button key={emoji} onClick={() => sendChatMessage(emoji)} className="text-xl hover:scale-125 transition-transform">{emoji}</button>
                           ))}
                        </div>
-                       {(!isLoggedIn || !userProfile?.activeSubscription) ? (
-                         <div className="flex items-center justify-center py-4 bg-primary/10 rounded-3xl border border-primary/20">
-                           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Upgrade to Fan ($5+) to unlock chat</p>
-                         </div>
-                       ) : (
-                       <div className="flex gap-4">
-                          <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChatMessage()} className="flex-grow px-8 py-5 bg-white dark:bg-gray-800 rounded-3xl border-none text-sm font-bold shadow-inner" placeholder="Transmit thoughts to the hub..." />
-                          <button onClick={() => sendChatMessage()} className="w-14 h-14 flex items-center justify-center bg-primary text-white rounded-[1.5rem] shadow-xl shadow-primary/30 active:scale-90 transition-all"><span className="material-symbols-outlined">send</span></button>
-                       </div>
-                       )}
+                       {(() => {
+                         const ADMIN_EMAIL = '3dma369@proton.me';
+                         const role = userProfile?.role as string | undefined;
+                         const isStaff = !!role && /admin|associate|corporate|pro/i.test(role);
+                         const isAdminEmail = !!userProfile?.email && userProfile.email.toLowerCase() === ADMIN_EMAIL;
+                         const canChat = isLoggedIn && (isStaff || isAdminEmail || !!userProfile?.activeSubscription);
+                         return !canChat ? (
+                           <div className="flex items-center justify-center py-4 bg-primary/10 rounded-3xl border border-primary/20">
+                             <p className="text-[10px] font-black uppercase tracking-widest text-primary">Upgrade to Fan ($5+) to unlock chat</p>
+                           </div>
+                         ) : (
+                           <div className="flex gap-4">
+                             <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChatMessage()} className="flex-grow px-8 py-5 bg-white dark:bg-gray-800 rounded-3xl border-none text-sm font-bold shadow-inner" placeholder="Transmit thoughts to the hub..." />
+                             <button onClick={() => sendChatMessage()} className="w-14 h-14 flex items-center justify-center bg-primary text-white rounded-[1.5rem] shadow-xl shadow-primary/30 active:scale-90 transition-all"><span className="material-symbols-outlined">send</span></button>
+                           </div>
+                         );
+                       })()}
                     </div>
                   </div>
                </div>

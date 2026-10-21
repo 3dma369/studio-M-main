@@ -1,4 +1,7 @@
-
+import toyVerseLogo from './src/assets/logos/toy-verse.png';
+import vibeXLogo from './src/assets/logos/vibe-x.png';
+import savvyPriceLogo from './src/assets/logos/savvy-price.png';
+import urbanOasisLogo from './src/assets/logos/urban-oasis.png';
 import { Product, Program, SubscriptionTier, ServiceOffering, TeamMember, TimelineEvent, FeaturedMember } from './types';
 
 export const STUDIO_APPS = [
@@ -10,6 +13,7 @@ export const STUDIO_APPS = [
     url: 'https://toyverse-app.web.app/',
     icon: '🧸',
     gradient: 'from-blue-900 to-purple-900',
+    logo: toyVerseLogo,
     tags: ['3D Prints', 'STL Files', 'Dioramas', 'Collectibles', 'Games', 'Social Media'],
     color: 'primary'
   },
@@ -21,30 +25,33 @@ export const STUDIO_APPS = [
     url: 'https://vibe-x-app.web.app/',
     icon: '🎵',
     gradient: 'from-purple-900 to-pink-900',
+    logo: vibeXLogo,
     tags: ['Music', 'DJs', 'Events', 'Live Stream', 'Artist Platform', 'Merch'],
     color: 'secondary'
-  },
-  {
-    id: 'dp-park',
-    title: 'DP Park',
-    description: '3D park experiences, virtual tours, and immersive digital environments.',
-    image: 'https://images.unsplash.com/photo-1614850715649-1d0106293bd1?auto=format&fit=crop&q=80&w=800',
-    url: 'https://dp-park-main.vercel.app/',
-    icon: '🎢',
-    gradient: 'from-green-800 to-teal-900',
-    tags: ['3D Parks', 'Virtual Tours', 'Immersive', 'Digital Experience'],
-    color: 'green-600'
   },
   {
     id: 'savvyprice',
     title: 'Savvy Price',
     description: 'Find the treasure anywhere — price discovery, inventory management and collector insights.',
-    image: 'https://images.unsplash.com/photo-1610368620902-e5e3c3a9e5f4?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&q=80&w=800',
     url: 'https://price-n-inventory.vercel.app/',
     icon: '💎',
     gradient: 'from-amber-600 to-orange-700',
+    logo: savvyPriceLogo,
     tags: ['Pricing', 'Inventory', 'Collectors', 'Insights', 'Discovery'],
     color: 'amber-600'
+  },
+  {
+    id: 'urbanoasis',
+    title: 'Urban Oasis',
+    description: 'SF park delivery, rentals, classes, and concierge. Order food, gear, and experiences straight to your picnic blanket.',
+    image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=1200',
+    url: 'https://urban-oasis-go.web.app/',
+    icon: '🌳',
+    gradient: 'from-emerald-900 via-teal-800 to-emerald-700',
+    logo: urbanOasisLogo,
+    tags: ['Parks', 'Rentals', 'Delivery', 'Classes'],
+    color: 'emerald-600'
   }
 ];
 
